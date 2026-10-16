@@ -3,7 +3,7 @@
 O fork e a branch já foram publicados:
 https://github.com/curtaleitura-cmyk/CurtaCut
 
-Pull Request aberto, ainda não integrado:
+Pull Request integrado à `main`:
 https://github.com/curtaleitura-cmyk/CurtaCut/pull/1
 
 ## Baixar a versão com nossas alterações
@@ -11,11 +11,11 @@ https://github.com/curtaleitura-cmyk/CurtaCut/pull/1
 Instalar Git e Node.js 24 LTS (o projeto requer `>=24 <25`). No PowerShell:
 
 ```powershell
-git clone --branch feat/pt-br-local-transcription https://github.com/curtaleitura-cmyk/CurtaCut.git
+git clone https://github.com/curtaleitura-cmyk/CurtaCut.git
 cd CurtaCut
 ```
 
-É necessário selecionar essa branch enquanto o PR não for integrado à `main`. Os instaladores do OpenChatCut original não contêm nossas mudanças.
+As alterações já estão na `main`. Os instaladores do OpenChatCut original não contêm nossas mudanças.
 
 ## Instalar e abrir
 
@@ -50,7 +50,7 @@ npm run lint
 npm test
 ```
 
-O `npm test` completo não pôde ser validado nesta sandbox por bloqueio de socket IPC do executor. As 37 verificações selecionadas, executadas por `node --import tsx`, passaram (ver `test-results.txt`). Essa limitação não é atribuída ao Windows.
+O `npm test` completo passou na execução final do GitHub Actions. A sandbox local limitava o socket IPC do executor; nela, as 37 verificações selecionadas também passaram (ver `test-results.txt`). O instalador passou no smoke test Windows.
 
 Aceitação manual ainda necessária:
 
@@ -63,6 +63,6 @@ Aceitação manual ainda necessária:
 
 ## Situação da integração
 
-O PR #1 está aberto no fork `curtaleitura-cmyk/CurtaCut`, com base `main` e compare `feat/pt-br-local-transcription`. O upstream não foi alterado.
+O PR #1 foi integrado à `main` após as seis validações do GitHub passarem. O instalador experimental e as instruções sem terminal estão no README principal.
 
-A suíte completa e a aceitação Windows continuam pendentes; nenhuma mesclagem automática foi executada. As próximas alterações devem ir pela branch e pelo PR, preservando o histórico e sem force push.
+A aceitação com um vídeo real da usuária e com a GPU do seu computador continua pendente. Não houve force push ou alteração do upstream.
