@@ -10,7 +10,7 @@ function transcriptionLanguageOptions(pageFields: readonly { name: string; optio
 
 for (const page of TRANSCRIPTION_SETTINGS_GROUP.vendors) {
   const options = transcriptionLanguageOptions(page.fields);
-  for (const language of ['it', 'ru']) {
+  for (const language of ['pt', 'auto', 'en', 'es', 'it', 'ru']) {
     assert.ok(
       options.some((option) => option.value === language),
       `${page.key} must offer ${language} transcription`,
@@ -28,8 +28,11 @@ assert.ok(
 );
 
 for (const model of ASR_MODELS) {
+  assert.match(model.language, /Português/, `${model.id} should advertise Portuguese support`);
   assert.match(model.language, /Italian|Italiano|it/i, `${model.id} should be advertised as Italian-capable`);
   assert.match(model.language, /Russian|Русский|ru/i, `${model.id} should be advertised as Russian-capable`);
 }
 
-console.log('transcription-language.verify: Italian and Russian transcription are exposed for local and AI providers');
+console.log('transcription-language.verify: Portuguese, auto and existing languages are exposed for local and AI providers');
+
+assert.equal(localAsrPage.fields.find(f => f.name === 'TRANSCRIPTION_LANGUAGE')?.defaultLabel, 'Português (Brasil) — pt');

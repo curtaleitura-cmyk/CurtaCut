@@ -1,3 +1,4 @@
+import { DEFAULT_TRANSCRIPTION_LANGUAGE } from '../../shared/transcription-language';
 // Transcription provider routing. Credentials remain server-side; local and
 // AssemblyAI keep their specialized execution paths.
 import {
@@ -59,7 +60,7 @@ export function preferredTranscriptionProvider(): TranscriptionProviderId {
   } catch {
     // SSR / private browsing: fall through to the default.
   }
-  return 'assemblyai';
+  return 'local';
 }
 
 export function preferredTranscriptionLanguage(): string {
@@ -69,7 +70,7 @@ export function preferredTranscriptionLanguage(): string {
   } catch {
     // SSR / private browsing: fall through to the default.
   }
-  return 'zh';
+  return DEFAULT_TRANSCRIPTION_LANGUAGE;
 }
 
 export function preferredTranscriptionDiarization(): boolean {
@@ -130,4 +131,30 @@ export async function transcribePath(
   provider: TranscriptionProviderId = preferredTranscriptionProvider(),
 ): Promise<TranscriptResult> {
   return transcribePathResumable(path, {}, () => {}, onWait, opts, provider);
+}
+
+/** Keep runtime transcription preferences in sync with server-saved settings. */
+export function syncTranscriptionPreferences(
+  models: Record<string, string>,
+  savedValues: Readonly<Record<string, string>> = {},
+): void {
+  // Status returns '' for unset server keys. Only an explicit settings save
+  // resets an existing browser preference; merely opening settings must not.
+  const language = models.TRANSCRIPTION_LANGUAGE?.trim();
+  try {
+    localStorage.setItem(TRANSCRIPTION_LANGUAGE_KEY, language
+      || (savedValues.TRANSCRIPTION_LANGUAGE === ''
+        ? DEFAULT_TRANSCRIPTION_LANGUAGE : preferredTranscriptionLanguage()));
+    localStorage.setItem(
+      TRANSCRIPTION_DIARIZATION_KEY,
+      models.TRANSCRIPTION_DIARIZATION === '0' ? '0' : '1',
+    );
+  } catch {
+    // Best-effort; runtime language and diarization defaults remain in effect.
+  }
+  const provider = models.PREFERRED_TRANSCRIPTION_PROVIDER;
+  setPreferredTranscriptionProvider(isTranscriptionProviderId(provider) ? provider
+    : savedValues.PREFERRED_TRANSCRIPTION_PROVIDER === '' ? 'local' : preferredTranscriptionProvider());
+  const ingest = models.AUTO_TRANSCRIBE_INGEST;
+  if (ingest === 'off' || ingest === 'local' || ingest === 'all') setAutoTranscribeIngest(ingest);
 }

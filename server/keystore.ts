@@ -177,7 +177,7 @@ export function computeCaps(): Caps {
       has("FREESOUND_API_KEY") ||
       has("FIRECRAWL_API_KEY"),
     transcription:
-      getKey("PREFERRED_TRANSCRIPTION_PROVIDER") === "local" ||
+      (!getKey("PREFERRED_TRANSCRIPTION_PROVIDER") || getKey("PREFERRED_TRANSCRIPTION_PROVIDER") === "local") ||
       has("ASSEMBLYAI_API_KEY") ||
       (getKey("PREFERRED_TRANSCRIPTION_PROVIDER") === "openai" && has("OPENAI_API_KEY")) ||
       (getKey("PREFERRED_TRANSCRIPTION_PROVIDER") === "mistral" && has("LLM_MISTRAL_API_KEY")) ||

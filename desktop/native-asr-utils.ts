@@ -32,7 +32,20 @@ export function whisperLanguage(language: string | undefined): string {
   if (!value || value === 'auto' || value === 'autodetect') return 'auto';
   if (value.startsWith('zh') || value === 'cmn' || value === 'yue') return 'zh';
   if (value.startsWith('en')) return 'en';
+  if (value === 'por' || value.startsWith('pt')) return 'pt';
   return value.slice(0, 3);
+}
+
+/** Keep timestamp-token decoding enabled: -nt can collapse word times at EOF. */
+export function whisperCliArgs(
+  ggmlPath: string, wavPath: string, language: string, useGpu: boolean,
+): string[] {
+  const args = [
+    '-m', ggmlPath, '-f', wavPath, '-t', '8', '-l', language,
+    '-ml', '20', '-sow', '-ojf', '-of', wavPath,
+  ];
+  if (!useGpu) args.push('-ng');
+  return args;
 }
 
 // whisper.cpp emits BPE tokens, not words: only a token whose raw text begins

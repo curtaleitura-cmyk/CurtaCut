@@ -16,8 +16,10 @@ const COMMON_TRANSCRIPTION_FIELDS: readonly SettingsField[] = [
     name: 'TRANSCRIPTION_LANGUAGE',
     label: '转写语言',
     kind: 'select',
-    defaultLabel: '中文（zh）',
+    defaultLabel: 'Português (Brasil) — pt',
     options: [
+      { value: 'pt', label: 'Português (Brasil) — pt' },
+      { value: 'auto', label: 'Detecção automática — auto' },
       { value: 'zh', label: '中文（zh）' },
       { value: 'en', label: '英语（en）' },
       { value: 'it', label: '意大利语（it）' },
@@ -202,7 +204,7 @@ export const TRANSCRIPTION_SETTINGS_GROUP: SettingsGroup = {
     { value: 'groq', label: 'Groq（云端）' },
     { value: 'elevenlabs', label: 'ElevenLabs Scribe（云端）' },
     { value: 'cartesia', label: 'Cartesia（云端）' },
-  ], 'AssemblyAI（默认）'),
+  ], '本地模型（免费 · 离线）'),
   vendors: [
     transcriptionPage('assemblyai', 'assemblyai', 'AssemblyAI', [secret('ASSEMBLYAI_API_KEY', 'API Key')]),
     localAsrPage,

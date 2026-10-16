@@ -1,3 +1,4 @@
+import { DEFAULT_TRANSCRIPTION_LANGUAGE } from '../../shared/transcription-language';
 // AssemblyAI transcription client. All calls go through the Vite proxy
 // (/assemblyai → api.assemblyai.com) which injects the API key server-side, so
 // the key never reaches the browser. Word-level timestamps are on by default.
@@ -116,11 +117,11 @@ async function createTranscript(audioUrl: string, opts: TranscribeOptions = {}):
     punctuate: true,
     format_text: true,
   };
-  const lang = opts.languageCode ?? 'zh';
+  const lang = opts.languageCode ?? DEFAULT_TRANSCRIPTION_LANGUAGE;
   if (lang === 'auto') {
     body.language_detection = true;
   } else {
-    // Explicit zh is far more reliable for Chinese documentary oral broadcast than pure auto-detect.
+    // Preserve the explicitly selected language; auto uses provider detection.
     body.language_code = lang;
   }
   const r = await serviceFetch(`${BASE}/transcript`, {

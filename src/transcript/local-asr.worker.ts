@@ -1,3 +1,4 @@
+import { browserWhisperLanguageOptions } from '../../shared/transcription-language';
 /// <reference lib="webworker" />
 // On-device whisper ASR worker (transformers.js). WebGPU backend where available
 // (Metal/D3D12/Vulkan), wasm fallback. Word-level timestamps via return_timestamps.
@@ -152,7 +153,7 @@ async function transcribe(
     return_timestamps: 'word',
     chunk_length_s: ASR_INFERENCE_CONTRACT.chunkSeconds,
     stride_length_s: ASR_INFERENCE_CONTRACT.strideSeconds,
-    language: request.language,
+    ...browserWhisperLanguageOptions(request.language),
   }).catch((error: unknown) => {
     // A failed run leaves the ORT session in an unusable state; drop it so the
     // next request reloads instead of compounding the exhausted heap.

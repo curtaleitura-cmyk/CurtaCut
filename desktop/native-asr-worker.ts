@@ -27,6 +27,7 @@ import { extractPcm } from './native-asr-pcm.ts';
 import {
   nativeGgmlFileName,
   whisperLanguage,
+  whisperCliArgs,
   whisperTokensToChunks,
   whisperWordsToChunks,
   writeWav,
@@ -95,18 +96,7 @@ function runWhisperCli(
   signal?: AbortSignal,
 ): Promise<{ jsonPath: string; stderr: string }> {
   return new Promise((resolve, reject) => {
-    const args = [
-      '-m', ggmlPath,
-      '-f', wavPath,
-      '-t', '8',
-      '-l', language,
-      '-ml', '20',
-      '-sow',
-      '-ojf',
-      '-nt',
-      '-of', wavPath,
-    ];
-    if (!useGpu) args.push('-ng');
+    const args = whisperCliArgs(ggmlPath, wavPath, language, useGpu);
     const child: ChildProcess = spawn(requireRuntime().whisperCliPath, args, {
       stdio: ['ignore', 'ignore', 'pipe'],
       windowsHide: true,
