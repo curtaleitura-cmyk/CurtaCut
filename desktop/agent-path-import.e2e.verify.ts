@@ -126,7 +126,7 @@ try {
   });
   assert.equal(rejected.imported.length, 0, 'outside path imports nothing');
   assert.equal(rejected.errors[0]?.code, 'PATH_OUTSIDE_IMPORT_ROOTS');
-  assert.match(rejected.errors[0]?.error ?? '', /已添加的目录/, 'outside path explains the configured roots');
+  assert.match(rejected.errors[0]?.error ?? '', /Added directories/, 'outside path explains the configured roots');
   assert.equal(pathAllowedByRoots([importRoot], outside), false, 'containment check agrees');
 
   console.log('agent-path-import.e2e.verify: whitelisted import, dedupe, and rejection passed');

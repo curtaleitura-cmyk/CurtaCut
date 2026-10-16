@@ -134,7 +134,7 @@ try {
   assert.equal(response.status, 400, 'an invalid browse body is refused');
   response = await post(LOCAL_MEDIA_BROWSE_PATH, { path: join(root, '..') });
   assert.equal(response.status, 400, 'a path outside the allowlist is refused');
-  assert.match(String((await json(response)).error), /已添加的目录/);
+  assert.match(String((await json(response)).error), /Added directories/);
 
   // ── Import runs the canonical probe/hash chain, then dedupes ──
   const imported = await json(await post(
