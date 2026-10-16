@@ -1,0 +1,75 @@
+{
+  "sample": "https://huggingface.co/edwixx/omnivoice-brpt-v15/resolve/main/samples/01_welcome.wav",
+  "sampleType": "public synthetic Brazilian Portuguese speech",
+  "durationSeconds": 6.33,
+  "engine": "whisper.cpp v1.9.2 CPU / tiny-q5_1",
+  "language": "pt",
+  "text": "Bongea, esta é uma\ndemonstração em\nportuguês brasileiro,\ncom voz clara e\nnatural.",
+  "chunks": [
+    {
+      "text": "Bongea,",
+      "start": 170,
+      "end": 1540
+    },
+    {
+      "text": "esta",
+      "start": 1650,
+      "end": 1790
+    },
+    {
+      "text": "é",
+      "start": 1790,
+      "end": 1800
+    },
+    {
+      "text": "uma",
+      "start": 1900,
+      "end": 2040
+    },
+    {
+      "text": "demonstração",
+      "start": 2040,
+      "end": 2800
+    },
+    {
+      "text": "em",
+      "start": 2800,
+      "end": 2930
+    },
+    {
+      "text": "português",
+      "start": 2930,
+      "end": 3490
+    },
+    {
+      "text": "brasileiro,",
+      "start": 3490,
+      "end": 4360
+    },
+    {
+      "text": "com",
+      "start": 4390,
+      "end": 4630
+    },
+    {
+      "text": "voz",
+      "start": 4630,
+      "end": 4880
+    },
+    {
+      "text": "clara",
+      "start": 4940,
+      "end": 5250
+    },
+    {
+      "text": "e",
+      "start": 5350,
+      "end": 5410
+    },
+    {
+      "text": "natural.",
+      "start": 5410,
+      "end": 6110
+    }
+  ]
+}
