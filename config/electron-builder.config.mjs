@@ -66,8 +66,8 @@ const updateChannel = target.includes('arm64') ? 'latest-arm64' : 'latest-x64';
 const hasMacSigningCertificate = Boolean(process.env.CSC_LINK || process.env.CSC_NAME);
 
 export default {
-  appId: 'dev.openchatcut.app',
-  productName: 'OpenChatCut',
+  appId: 'dev.curtaleitura.curtacut',
+  productName: 'CurtaCut',
   artifactName: '${productName}-${version}-${arch}.${ext}',
   directories: { output: 'release' },
   // 7z LZMA maximum compression for the distributable installers (dmg/zip/nsis/AppImage).
@@ -77,8 +77,8 @@ export default {
   compression: 'maximum',
   publish: [{
     provider: 'github',
-    owner: '0xsline',
-    repo: 'OpenChatCut',
+    owner: 'curtaleitura-cmyk',
+    repo: 'CurtaCut',
     channel: updateChannel,
   }],
   files: [

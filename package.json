@@ -2,7 +2,7 @@
   "name": "openchatcut",
   "private": true,
   "version": "0.2.17",
-  "description": "Open-source ChatCut alternative: local-first, agent-native AI video editor with MCP.",
+  "description": "CurtaCut: editor de vídeo baseado no OpenChatCut, com Whisper local e Português (Brasil) por padrão.",
   "license": "AGPL-3.0-or-later",
   "author": "OpenChatCut Contributors",
   "type": "module",
@@ -163,5 +163,10 @@
     "onnxruntime-web": "1.29.0",
     "adm-zip": "0.6.0",
     "sharp": "0.35.0"
+  },
+  "homepage": "https://github.com/curtaleitura-cmyk/CurtaCut",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/curtaleitura-cmyk/CurtaCut.git"
   }
 }
