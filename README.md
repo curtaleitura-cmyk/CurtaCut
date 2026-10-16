@@ -4,7 +4,19 @@
 
 O CurtaCut é uma versão independente mantida por `curtaleitura-cmyk`. Reutiliza a timeline, a edição por texto, os projetos e a exportação do [OpenChatCut](https://github.com/0xsline/OpenChatCut). O objetivo inicial é facilitar a edição de vídeos falados, resenhas e conteúdos para YouTube, Instagram e TikTok.
 
-> **Estado atual:** versão de desenvolvimento. As melhorias estão na branch [`feat/pt-br-local-transcription`](https://github.com/curtaleitura-cmyk/CurtaCut/tree/feat/pt-br-local-transcription), no [PR #1](https://github.com/curtaleitura-cmyk/CurtaCut/pull/1). Enquanto esse PR estiver aberto, baixar apenas a `main` não inclui as melhorias de transcrição. **Ainda não há instalador `.exe` próprio do CurtaCut.**
+> **Estado atual:** versão experimental integrada à `main`. Há um instalador para Windows 64 bits, com Whisper local e Português (Brasil) por padrão. A suíte completa e os testes do instalador passaram no GitHub; a aceitação com vídeos próprios no computador da usuária continua necessária.
+
+## Baixar e instalar no Windows
+
+**[Baixar CurtaCut para Windows x64 — ZIP com instalador, cerca de 740 MB](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38952050526/artifacts/12070055212)**
+
+1. Entre na sua conta do GitHub para baixar o artefato.
+2. Extraia o ZIP e abra **`CurtaCut-0.2.17-x64.exe`**.
+3. Siga o assistente de instalação e abra o CurtaCut.
+4. Nas configurações de modelos locais, baixe um modelo Whisper antes da primeira transcrição. Confira **Local** e **Português (Brasil) — pt**; preferências anteriores, se existirem, continuam sendo respeitadas.
+
+A instalação pelo `.exe` dispensa Git, Node.js e os comandos abaixo. O pacote inclui `SHA256SUMS.txt`. É um instalador experimental; ainda não há release estável assinada. Esse download do GitHub Actions expira em **15/11/2026**. [Ver execução e testes](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38952050526).
+
 
 ## O que já mudou nesta versão
 
@@ -15,7 +27,7 @@ O CurtaCut é uma versão independente mantida por `curtaleitura-cmyk`. Reutiliz
 - Correção dos timestamps no fallback nativo Whisper.cpp, importantes para cortar o vídeo pelo texto.
 - Identidade CurtaCut nos títulos e informações principais do aplicativo; código de instalação/atualização preparado para nosso repositório.
 
-O código de transcrição passou por testes automatizados e por um teste de áudio sintético em português brasileiro em Linux/CPU. A instalação e o fluxo completo no Windows ainda precisam de validação. A interface ainda não foi totalmente traduzida para português.
+O código de transcrição passou por testes automatizados e por um teste de áudio sintético em português brasileiro em Linux/CPU. A instalação automatizada passou no Windows; o fluxo com vídeo próprio no computador da usuária continua pendente de validação. A interface ainda não foi totalmente traduzida para português.
 
 ## Instalar no Windows — pelo código-fonte
 
@@ -35,12 +47,12 @@ npm --version
 
 `node --version` deve começar com `v24.`. Se o PowerShell bloquear `npm.ps1`, use `npm.cmd` nos comandos abaixo, sem precisar mudar a política do Windows.
 
-### 2. Baixe a branch com as nossas alterações
+### 2. Baixe a versão principal
 
 No PowerShell, entre na pasta onde deseja guardar o aplicativo e execute:
 
 ```powershell
-git clone --branch feat/pt-br-local-transcription https://github.com/curtaleitura-cmyk/CurtaCut.git
+git clone https://github.com/curtaleitura-cmyk/CurtaCut.git
 cd CurtaCut
 npm.cmd ci
 Copy-Item .env.example .env.local
@@ -86,7 +98,7 @@ Para abrir novamente, entre na pasta `CurtaCut` e rode `npm.cmd run dev` ou `npm
 Para buscar atualizações da branch, depois de salvar/encerrar seu trabalho:
 
 ```powershell
-git switch feat/pt-br-local-transcription
+git switch main
 git pull --ff-only
 npm.cmd ci
 npm.cmd run dev
@@ -94,13 +106,11 @@ npm.cmd run dev
 
 Se tiver alterações próprias no código, confira `git status` antes de atualizar; não use comandos que descartem seus arquivos. Faça backup dos projetos e da mídia antes de atualizar versões de desenvolvimento.
 
-## Instalador `.exe`
+## Gerar outro instalador
 
-Ainda não foi gerado nem publicado um instalador próprio desta versão. Os instaladores do OpenChatCut original não contêm as alterações do CurtaCut.
+O workflow **CurtaCut Windows installer** pode ser executado manualmente em [Actions](https://github.com/curtaleitura-cmyk/CurtaCut/actions/workflows/curtacut-windows.yml), selecionando a branch desejada. Ele compila, instala, testa, desinstala e disponibiliza o `.exe` com checksum como artefato por 30 dias. O upload do instalador depende da aprovação do smoke test.
 
-O projeto já possui um workflow manual de empacotamento desktop e o script `npm run desktop:dist:win`, mas gerar um instalador, validar sua instalação e publicar uma release são etapas separadas. Não considerar um pacote instalado/testado no Windows até essa validação ocorrer.
-
-As atualizações do CurtaCut devem vir de [releases deste repositório](https://github.com/curtaleitura-cmyk/CurtaCut/releases), quando existirem. Código-fonte ZIP não é instalador.
+O empacotamento usa NSIS/Windows x64. O projeto também mantém o script `npm run desktop:dist:win` para geração local. Código-fonte ZIP não é instalador; escolha o artefato Windows indicado acima.
 
 ## Recursos e próximos passos
 
@@ -108,9 +118,10 @@ As atualizações do CurtaCut devem vir de [releases deste repositório](https:/
 |---|---|
 | Timeline, cortes, desfazer e projetos locais | Reutilizados do OpenChatCut |
 | Edição por texto e timestamps | Recursos existentes preservados; regressões selecionadas testadas |
-| Português e Whisper local por padrão | Implementados na branch do PR #1 |
+| Português e Whisper local por padrão | Implementados e integrados na `main` |
 | Legendas e exportação SRT | Recursos existentes; aceitação com vídeos próprios pendente |
-| Validação Windows e vídeo completo exportado | Pendente |
+| Instalador Windows | Geração, instalação, abertura, renderização de quadro e recuperação da janela passaram em CI |
+| Validação com vídeo da usuária e GPU real | Pendente |
 | Sugestões contextuais de erros de gravação | Planejadas; detector semântico e interface ainda não implementados |
 | Processamento no PC controlado pelo celular | Proposta técnica; não implementado |
 | Importação Google Drive | Planejada; sem OAuth/credenciais configurados |
@@ -120,8 +131,9 @@ As atualizações do CurtaCut devem vir de [releases deste repositório](https:/
 
 - **37 verificações selecionadas passaram**, além de TypeScript, lint e build de produção, na primeira entrega de transcrição.
 - O teste real em português usou uma amostra sintética pública de 6,33 segundos e Whisper.cpp Tiny q5_1 em CPU. Produziu 13 palavras com duração positiva; o modelo errou a saudação, portanto isso não comprova precisão suficiente para vídeos finais.
-- A suíte completa `npm test` foi bloqueada pelo socket IPC do executor nesta sandbox; não foi declarada aprovada. Os testes selecionados foram executados com `node --import tsx`.
-- Windows/Electron de ponta a ponta, inferência real no navegador e exportação de um vídeo completo da usuária continuam pendentes.
+- A suíte completa `npm test`, lint e build passaram na execução final do GitHub Actions. A limitação de socket IPC afetava somente a execução local na sandbox.
+- As seis validações finais do GitHub passaram: CI completo, runtime Whisper Windows, persistência de modelos, recuperação MCP, renderização de fontes de vídeo Windows e instalador Windows.
+- O app instalado passou no smoke test Windows (SMOKE-OK), incluindo renderização de um quadro e recuperação da janela de transcrição. A inferência real no navegador, a aceitação com vídeo completo da usuária e a GPU específica continuam pendentes.
 
 O [relatório técnico e as evidências](https://github.com/curtaleitura-cmyk/CurtaCut/tree/feat/pt-br-local-transcription/docs/curta-leitura) estão na branch de desenvolvimento. A documentação original foi preservada em [README_UPSTREAM.md](README_UPSTREAM.md), como referência do projeto de origem; seus downloads, canais e instruções de release pertencem ao OpenChatCut original.
 

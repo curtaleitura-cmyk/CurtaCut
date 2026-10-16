@@ -1,5 +1,7 @@
 # Editor de Vídeo — primeira entrega local
 
+> Atualização de 16/10/2026: PR #1 integrado à `main`; todas as seis validações do GitHub passaram, incluindo `npm test` completo e geração/instalação/teste do `.exe` no Windows. O [instalador experimental](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38952050526/artifacts/12070055212) está disponível até 15/11/2026. Os registros abaixo documentam a primeira entrega e suas limitações naquele momento; a aceitação com vídeo próprio e GPU da usuária segue pendente.
+
 ## Estado da entrega
 
 - Origem: https://github.com/0xsline/OpenChatCut
