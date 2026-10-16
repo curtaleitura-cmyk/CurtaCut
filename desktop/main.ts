@@ -149,7 +149,7 @@ function registerDesktopHandlers(trustedOrigin: string): void {
       ? requestedPath
       : app.getPath('videos');
     const options: OpenDialogOptions = {
-      title: '选择素材保存目录',
+      title: 'Choose media save directory',
       defaultPath: requested,
       properties: ['openDirectory', 'createDirectory'],
     };
@@ -166,7 +166,7 @@ function registerDesktopHandlers(trustedOrigin: string): void {
   ipcMain.handle('openchatcut:select-export-directory', trustedDesktopHandler(trustedOrigin, async (event) => {
     const parent = BrowserWindow.fromWebContents(event.sender);
     const options: OpenDialogOptions = {
-      title: '选择导出目录',
+      title: 'Choose export directory',
       defaultPath: app.getPath('videos'),
       properties: ['openDirectory', 'createDirectory'],
     };
@@ -175,7 +175,7 @@ function registerDesktopHandlers(trustedOrigin: string): void {
       : await dialog.showOpenDialog(options);
     if (result.canceled || !result.filePaths[0]) return null;
     const directory = await validatedDirectory(result.filePaths[0]);
-    if (!directory) throw new Error('所选导出目录不可用');
+    if (!directory) throw new Error('The selected export directory is unavailable');
     const grant = createExportDirectoryGrant(directory);
     activeExportDirectory = { directory, grant };
     await persistExportDirectory(exportStatePath, directory, grant.grantId);
@@ -190,7 +190,7 @@ function registerDesktopHandlers(trustedOrigin: string): void {
     }
     const parent = BrowserWindow.fromWebContents(event.sender);
     const options: SaveDialogOptions = {
-      title: '选择导出文件',
+      title: 'Choose export file',
       defaultPath: join(app.getPath('videos'), suggestedFilename),
     };
     const result = parent
@@ -198,9 +198,9 @@ function registerDesktopHandlers(trustedOrigin: string): void {
       : await dialog.showSaveDialog(options);
     if (result.canceled || !result.filePath) return null;
     const filename = basename(result.filePath);
-    if (!validDesktopExportFilename(filename)) throw new Error('导出文件名无效');
+    if (!validDesktopExportFilename(filename)) throw new Error('Invalid export filename');
     const directory = await validatedDirectory(dirname(result.filePath));
-    if (!directory) throw new Error('所选导出目录不可用');
+    if (!directory) throw new Error('The selected export directory is unavailable');
     const grant = createExportDirectoryGrant(directory);
     activeExportDirectory = { directory, grant };
     await persistExportDirectory(exportStatePath, directory, grant.grantId);
@@ -241,7 +241,7 @@ function registerDesktopHandlers(trustedOrigin: string): void {
       minWidth: 300,
       minHeight: 220,
       backgroundColor: '#16161a',
-      title: '文字稿',
+      title: 'Transcript',
       show: false,
       webPreferences: {
         preload: PRELOAD_PATH,
@@ -378,7 +378,7 @@ async function boot(): Promise<void> {
       chooseRoot: async (requestedPath) => {
         const parent = BrowserWindow.fromWebContents(event.sender);
         const options: OpenDialogOptions = {
-          title: '选择允许 Agent 访问的素材文件夹',
+          title: 'Choose media folders the assistant can access',
           defaultPath: agentImportPickerDefaultPath(requestedPath),
           properties: ['openDirectory'],
         };

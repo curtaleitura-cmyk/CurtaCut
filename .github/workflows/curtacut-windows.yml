@@ -29,9 +29,11 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci --loglevel=error
-      - name: Verify Portuguese defaults and native timing
+      - name: Verify Portuguese interface, defaults and native timing
         shell: pwsh
         run: |
+          node --import tsx src/i18n/pt-br.verify.ts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --import tsx src/transcript/transcription-defaults.verify.ts
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --import tsx src/components/settings/transcription-language.verify.ts

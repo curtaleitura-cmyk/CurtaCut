@@ -48,16 +48,16 @@ export function probeUrlError(url: RequestInfo | URL): string | null {
   try {
     parsed = new URL(String(url));
   } catch {
-    return '探测地址不是合法 URL';
+    return 'The probe address is not a valid URL';
   }
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-    return `探测地址协议不支持:${parsed.protocol}`;
+    return `Unsupported probe URL protocol:${parsed.protocol}`;
   }
-  if (parsed.username || parsed.password) return '探测地址不允许携带内嵌凭据';
+  if (parsed.username || parsed.password) return 'Probe URLs cannot contain embedded credentials';
   const host = parsed.hostname.replace(/^\[|\]$/g, '').toLowerCase();
   if (/^169\.254\.\d{1,3}\.\d{1,3}$/.test(host) || host.startsWith('fe80:')
     || host === 'metadata.google.internal') {
-    return '探测地址指向云元数据/链路本地网段,已拒绝';
+    return 'Probe URL points to cloud metadata or a link-local network and was rejected';
   }
   return null;
 }
@@ -448,10 +448,10 @@ export async function runProbe(page: string, overrides: Record<string, unknown>)
   // writability check reads the panel's raw value directly.
   if (page === 'storage/projects') return runDataDirProbe(overrides);
   const probe = PROBES[page];
-  if (!probe) return { ok: false, message: '该厂商暂不支持连接测试' };
+  if (!probe) return { ok: false, message: 'Connection testing is not supported for this provider' };
   const get = makeGetter(overrides);
   const ready = probe.needs.some((group) => group.every((n) => get(n).length > 0));
-  if (!ready) return { ok: false, message: '尚未填写 API Key · 填好后再点测试' };
+  if (!ready) return { ok: false, message: 'Enter an API key before testing the connection' };
   const started = Date.now();
   try {
     const response = await probe.run(get);
@@ -462,9 +462,9 @@ export async function runProbe(page: string, overrides: Record<string, unknown>)
       if (vendorError) return { ok: false, status: response.status, latencyMs, message: vendorError };
       const models = probe.models?.(bodyText);
       const modelText = models
-        ? models.length > 0 ? ` · 已读取 ${models.length} 个模型` : ' · 接口未返回模型列表'
+        ? models.length > 0 ? ` · Loaded ${models.length} models` : ' · The endpoint returned no model list'
         : '';
-      const okText = probe.okText?.(bodyText) ?? '连接成功 · 鉴权通过';
+      const okText = probe.okText?.(bodyText) ?? 'Connected · Authentication accepted';
       return {
         ok: true,
         status: response.status,

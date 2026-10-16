@@ -1,7 +1,7 @@
 // Locale dictionaries moved from static imports to a per-locale lazy fetch, so
 // t()/tData() now read a table that may not be loaded yet. This pins the lookup
 // semantics that were previously inlined in locale.ts, per language:
-//   t:     zh → key · en → EN · it → IT then EN · ru → RU only (no EN fallback)
+//   t:     zh → key · en → EN · it → IT then EN · ru → RU then EN
 //   tData: zh → ZH_DATA · en → EN_DATA · it → IT_DATA then EN_DATA · ru → EN_DATA
 // and the "never go blank" contract while a dictionary is still in flight.
 // npx tsx src/i18n/dictRegistry.verify.ts
@@ -32,12 +32,12 @@ function onlyIn(has: Record<string, string>, lacks: Record<string, string>): str
   return key;
 }
 
-// ── in flight: the Chinese original stands in, never an empty string ─────────
+// ── in flight: English stands in, never Chinese or an empty string ─────────
 {
   setLocale('en');
   const untranslatedYet = t('导出');
-  assert.equal(untranslatedYet, '导出',
-    'before the dictionary lands, t() returns the Chinese key rather than blank');
+  assert.equal(untranslatedYet, EN['导出'],
+    'before the dictionary lands, t() returns English rather than Chinese');
   assert.equal(tData('Bar Chart - Annual Sales'), 'Bar Chart - Annual Sales',
     'tData() likewise passes the original through');
 }
@@ -70,15 +70,15 @@ function onlyIn(has: Record<string, string>, lacks: Record<string, string>): str
     'it is wired to fall back to EN_DATA for data names');
 }
 
-// ── ru: no English fallback for UI copy, but EN_DATA for data names ──────────
+// ── ru: English fallback for UI copy and data names ──────────
 {
   setLocale('ru');
   await ensureLocaleDict('ru');
   const russian = Object.keys(RU)[0]!;
   assert.equal(t(russian), RU[russian], 'ru reads the Russian dictionary');
   const englishOnly = onlyIn(EN, RU);
-  assert.equal(t(englishOnly), englishOnly,
-    'an untranslated key stays Chinese in ru — it must NOT fall back to English');
+  assert.equal(t(englishOnly), EN[englishOnly],
+    'an untranslated key falls back to English in ru');
   const dataKey = Object.keys(EN_DATA)[0]!;
   assert.equal(tData(dataKey), EN_DATA[dataKey], 'ru data names still read EN_DATA');
 }

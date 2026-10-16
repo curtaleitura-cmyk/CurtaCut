@@ -206,7 +206,7 @@ export async function refreshTokens(session: XaiSession): Promise<XaiSession> {
 async function invalidateSession(): Promise<void> {
   clearTimer();
   current = null;
-  statusError = '登录会话已失效，请重新导入。';
+  statusError = 'The sign-in session expired. Please import it again.';
   dropSessionFile();
   retryDelayMs = RETRY_MIN_MS;
   await setKeys({ [ACCESS_KEY]: '' });
@@ -278,11 +278,11 @@ export function importXaiOauthFromCli(): Promise<XaiOauthStatus> {
     try {
       text = readFileSync(CLI_AUTH_JSON, 'utf8');
     } catch {
-      throw new Error('未找到 ~/.grok/auth.json。请先在终端运行官方 Grok CLI 登录：grok login，完成后回来点击导入。');
+      throw new Error('Could not find ~/.grok/auth.json. Sign in using the official Grok CLI command grok login, then import again.');
     }
     const parsed = parseGrokAuthJson(text);
     if (!parsed) {
-      throw new Error('无法解析 ~/.grok/auth.json 中的登录会话。请先在终端运行 grok login 完成登录。');
+      throw new Error('Could not read the sign-in session in ~/.grok/auth.json. Run grok login in a terminal first.');
     }
     const previous = current;
     try {
@@ -298,7 +298,7 @@ export function importXaiOauthFromCli(): Promise<XaiOauthStatus> {
       current = previous;
       statusError = messageOf(error).slice(0, 160);
       armTimer();
-      throw new Error(`登录会话已读取但刷新失败：${messageOf(error)}`);
+      throw new Error(`The sign-in session was loaded but could not be refreshed: ${messageOf(error)}`);
     }
   });
 }

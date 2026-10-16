@@ -221,7 +221,7 @@ export class MobileUploadService {
     };
   }
 
-  async createSession(locale: MobilePageLocale = 'zh'): Promise<MobileUploadSessionSnapshot> {
+  async createSession(locale: MobilePageLocale = 'en'): Promise<MobileUploadSessionSnapshot> {
     const addresses = this.options.addresses();
     if (addresses.length === 0) throw new Error('no LAN IPv4 address available');
     await this.ensureServer();

@@ -20,6 +20,9 @@ A instalação pelo `.exe` dispensa Git, Node.js e os comandos abaixo. O pacote 
 
 ## O que já mudou nesta versão
 
+- **Interface em Português (Brasil)**, com inglês para os textos ainda sem tradução. Se uma preferência anterior mantiver inglês ou chinês, use o seletor de idioma na barra superior.
+- Histórico de versões: os salvamentos automáticos antigos aparecem como **Salvamento automático**. Nomes personalizados são preservados.
+
 - **Português (Brasil) — `pt`** nas opções de transcrição e como padrão em uma instalação nova.
 - **Whisper local** como provedor inicial, sem exigir chave de API paga.
 - Detecção automática e outros idiomas continuam disponíveis.
@@ -27,7 +30,7 @@ A instalação pelo `.exe` dispensa Git, Node.js e os comandos abaixo. O pacote 
 - Correção dos timestamps no fallback nativo Whisper.cpp, importantes para cortar o vídeo pelo texto.
 - Identidade CurtaCut nos títulos e informações principais do aplicativo; código de instalação/atualização preparado para nosso repositório.
 
-O código de transcrição passou por testes automatizados e por um teste de áudio sintético em português brasileiro em Linux/CPU. A instalação automatizada passou no Windows; o fluxo com vídeo próprio no computador da usuária continua pendente de validação. A interface ainda não foi totalmente traduzida para português.
+O código de transcrição passou por testes automatizados e por um teste de áudio sintético em português brasileiro em Linux/CPU. A instalação automatizada passou no Windows; o fluxo com vídeo próprio no computador da usuária continua pendente de validação. A tradução para português cobre os controles principais; o restante do dicionário usa inglês. Mensagens externas de provedores e conteúdo criado pelo usuário mantêm o idioma original.
 
 ## Instalar no Windows — pelo código-fonte
 
