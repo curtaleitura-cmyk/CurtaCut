@@ -1,0 +1,186 @@
+# Produces an unsigned development installer, never publishes a release.
+name: CurtaCut Windows installer
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/curtacut-windows.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: curtacut-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  installer:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --loglevel=error
+      - name: Verify Portuguese defaults and native timing
+        shell: pwsh
+        run: |
+          node --import tsx src/transcript/transcription-defaults.verify.ts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --import tsx src/components/settings/transcription-language.verify.ts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --import tsx desktop/native-asr-worker.verify.ts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --import tsx desktop/update-packaging.verify.ts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Lint
+        run: npm run lint
+      - name: Prepare rendering browser
+        run: node -e "import('@remotion/renderer').then(m => m.ensureBrowser()).then(() => console.log('browser ready'))"
+      - name: Build Windows NSIS installer
+        run: npm run desktop:dist:win
+      - name: Smoke test Windows installer
+        shell: pwsh
+        env:
+          CC_SMOKE: '1'
+          CC_SMOKE_RENDER: '1'
+          CC_SMOKE_MCP_RECOVERY: '1'
+          CC_SMOKE_RENDERER_RECOVERY: '1'
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installers = @(Get-ChildItem -LiteralPath release -Filter '*.exe' -File)
+          if ($installers.Count -ne 1) {
+            throw "Expected one NSIS installer, found $($installers.Count)"
+          }
+
+          $installDir = Join-Path $env:RUNNER_TEMP "openchatcut-smoke-$PID"
+          Remove-Item -LiteralPath $installDir -Recurse -Force -ErrorAction SilentlyContinue
+          $installed = $false
+          try {
+            $install = Start-Process -FilePath $installers[0].FullName `
+              -ArgumentList @('/S', "/D=$installDir") -Wait -PassThru
+            if ($install.ExitCode -ne 0) {
+              throw "NSIS installer exited with $($install.ExitCode)"
+            }
+
+            $installedExe = Join-Path $installDir 'CurtaCut.exe'
+            if (-not (Test-Path -LiteralPath $installedExe -PathType Leaf)) {
+              throw "NSIS installer did not create $installedExe"
+            }
+            $installed = $true
+
+            # What the installed tree must carry: boot() reads all of these
+            # before it can show a window, and issue #140 reported exactly
+            # these as absent. Asserting them here names the missing file
+            # instead of leaving a launch that "does nothing".
+            $required = @(
+              'resources\app.asar',
+              'resources\dist\index.html',
+              'resources\remotion-bundle\index.html',
+              'resources\app.asar.unpacked\node_modules\ffmpeg-static\ffmpeg.exe'
+            )
+            $absent = @($required | Where-Object { -not (Test-Path -LiteralPath (Join-Path $installDir $_)) })
+            if ($absent.Count -gt 0) {
+              throw "Installed tree is missing: $($absent -join ', ')"
+            }
+            $shell = @(Get-ChildItem -LiteralPath (Join-Path $installDir 'resources\chrome-headless-shell') `
+              -Recurse -Filter 'chrome-headless-shell.exe' -File -ErrorAction SilentlyContinue)
+            if ($shell.Count -lt 1) {
+              throw 'Installed tree has no chrome-headless-shell.exe for rendering'
+            }
+            # Redirect the app's output: Start-Process discards stdout/stderr
+            # otherwise, which left the v0.2.12 hang with zero evidence — every
+            # [smoke] milestone log evaporated. The bounded wait is the outer
+            # safety net over the app's own 240s watchdog (which the same hang
+            # proved can fail); without it the job burns the 6h runner limit.
+            $smokeOut = Join-Path $env:RUNNER_TEMP 'smoke-stdout.log'
+            $smokeErr = Join-Path $env:RUNNER_TEMP 'smoke-stderr.log'
+            $smoke = Start-Process -FilePath $installedExe -PassThru `
+              -RedirectStandardOutput $smokeOut -RedirectStandardError $smokeErr
+            $null = $smoke.Handle  # cache the handle or ExitCode reads as null
+            $finished = $smoke.WaitForExit(420000)
+            if (-not $finished) {
+              taskkill /T /F /PID $smoke.Id 2>$null | Out-Null
+            }
+            Write-Host '--- smoke stdout ---'
+            if (Test-Path -LiteralPath $smokeOut) { Get-Content -LiteralPath $smokeOut }
+            Write-Host '--- smoke stderr ---'
+            if (Test-Path -LiteralPath $smokeErr) { Get-Content -LiteralPath $smokeErr }
+            # SMOKE-OK in the captured log is the pass signal, not the exit
+            # code: after the forced renderer crashes, the Windows main
+            # process can deadlock so hard on teardown that no exit path runs
+            # (v0.2.12 runs 5 and 6 — every assertion passed, then the wedge).
+            # The smoke's job is asserting app behavior; surviving harness
+            # teardown on a CI box is not a shipped invariant. Any FAILED
+            # assertion still fails: SMOKE-OK is printed only after the last
+            # phase succeeds.
+            $smokeOk = (Test-Path -LiteralPath $smokeOut) -and
+              (Select-String -LiteralPath $smokeOut -Pattern 'SMOKE-OK' -Quiet)
+            if (-not $smokeOk) {
+              if (-not $finished) {
+                throw 'Installed CurtaCut smoke still running after 420s; killed. The last [smoke] line above is where it hung.'
+              }
+              throw "Installed CurtaCut smoke exited with $($smoke.ExitCode)"
+            }
+            if (-not $finished -or $smoke.ExitCode -ne 0) {
+              Write-Host 'SMOKE-OK reached; the process then wedged in Windows teardown after the forced renderer crashes and was killed. Known Electron teardown deadlock, not a smoke failure.'
+            }
+          } finally {
+            $cleanupError = $null
+            if ($installed) {
+              try {
+                $uninstallers = @(Get-ChildItem -LiteralPath $installDir -Filter 'Uninstall*.exe' -File)
+                if ($uninstallers.Count -ne 1) {
+                  throw "Expected one NSIS uninstaller, found $($uninstallers.Count)"
+                }
+                $uninstall = Start-Process -FilePath $uninstallers[0].FullName `
+                  -ArgumentList '/S' -Wait -PassThru
+                if ($uninstall.ExitCode -ne 0) {
+                  throw "NSIS uninstaller exited with $($uninstall.ExitCode)"
+                }
+              } catch {
+                $cleanupError = $_.Exception.Message
+              }
+            }
+            Remove-Item -LiteralPath $installDir -Recurse -Force -ErrorAction SilentlyContinue
+            if (Test-Path -LiteralPath $installDir) {
+              $cleanupError = "Failed to clean installed application at $installDir"
+            }
+            if ($cleanupError) {
+              throw $cleanupError
+            }
+          }
+
+      - name: Checksum verified installer
+        shell: pwsh
+        run: |
+          $installer = @(Get-ChildItem release -Filter 'CurtaCut-*.exe' -File)
+          if ($installer.Count -ne 1) { throw 'Expected exactly one CurtaCut installer' }
+          $hash = (Get-FileHash $installer[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $($installer[0].Name)" | Set-Content -Encoding ascii release/SHA256SUMS.txt
+      - name: Upload verified installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: CurtaCut-Windows-x64-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 30
+          path: |
+            release/CurtaCut-*.exe
+            release/SHA256SUMS.txt
+      - name: Upload smoke logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CurtaCut-Windows-smoke-logs-${{ github.sha }}
+          if-no-files-found: ignore
+          retention-days: 14
+          path: |
+            ${{ runner.temp }}/smoke-stdout.log
+            ${{ runner.temp }}/smoke-stderr.log
