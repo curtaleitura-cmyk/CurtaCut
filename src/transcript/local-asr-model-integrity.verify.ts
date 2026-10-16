@@ -3,6 +3,9 @@
 // the catalog parsing, the per-engine predicate, the browser precheck, and what
 // the settings list shows each kind of client.
 import assert from 'node:assert/strict';
+import { setLocale } from '../i18n/locale';
+// This fixture asserts the Chinese copy; it must not depend on the app default.
+setLocale('zh');
 import { TranscriptionError } from './assemblyai';
 import {
   asrEngineReady, assertBrowserAsrReady, fetchLocalAsrCatalog, fetchLocalAsrModelStatus,
