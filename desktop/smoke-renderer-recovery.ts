@@ -7,6 +7,12 @@ const RECOVERY_TIMEOUT_MS = 10_000;
 const TRANSCRIPT_TIMEOUT_MS = 30_000;
 
 async function crashAndWait(win: BrowserWindow): Promise<void> {
+  // Recovery must preserve the page being tested, including fork branding and
+  // floating-window titles, rather than matching the upstream product name.
+  const expectedTitle = await win.webContents.executeJavaScript('document.title') as unknown;
+  if (typeof expectedTitle !== 'string' || !expectedTitle.trim()) {
+    throw new Error('renderer has no title before crash recovery');
+  }
   const recovered = new Promise<void>((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error('renderer crash recovery timed out')), RECOVERY_TIMEOUT_MS);
     win.webContents.once('did-finish-load', () => {
@@ -17,7 +23,7 @@ async function crashAndWait(win: BrowserWindow): Promise<void> {
   win.webContents.forcefullyCrashRenderer();
   await recovered;
   const title = await win.webContents.executeJavaScript('document.title') as unknown;
-  if (title !== 'OpenChatCut') throw new Error(`renderer recovered with unexpected title: ${String(title)}`);
+  if (title !== expectedTitle) throw new Error(`renderer recovered with unexpected title: ${String(title)}`);
 }
 
 async function waitForTranscript(win: BrowserWindow, name: string): Promise<void> {
