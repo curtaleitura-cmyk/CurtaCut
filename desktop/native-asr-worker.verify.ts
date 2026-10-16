@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   nativeGgmlFileName,
+  whisperCliArgs,
   whisperTokensToChunks,
   whisperWordsToChunks,
 } from './native-asr-utils';
@@ -165,3 +166,12 @@ assert.deepEqual(
 assert.equal(whisperWordsToChunks(undefined).length, 0, 'missing words yield no chunks');
 
 console.log('native-asr-worker.verify: whisper server words projection OK');
+
+// The CLI must decode timestamp tokens; -nt collapsed most PT words to EOF
+// in an actual whisper.cpp v1.9.2 / tiny-q5_1 recording smoke test.
+const args = whisperCliArgs('model.bin', 'fala.wav', 'pt', false);
+assert.equal(args[args.indexOf('-l') + 1], 'pt');
+assert.ok(args.includes('-ojf'), 'full JSON retains per-token offsets');
+assert.ok(args.includes('-ng'), 'CPU mode stays available');
+assert.ok(!args.includes('-nt') && !args.includes('--no-timestamps'));
+assert.ok(!whisperCliArgs('model.bin', 'fala.wav', 'en', true).includes('-ng'));

@@ -60,7 +60,7 @@ default, and local transcription needs no cloud key. Cloud choices use:
 - Cartesia: `CARTESIA_API_KEY`; `CARTESIA_TRANSCRIPTION_MODEL` defaults to
   `ink-whisper` (batch transcription; `ink-2` is streaming-only)
 
-`TRANSCRIPTION_LANGUAGE` defaults to `zh`, and
+`TRANSCRIPTION_LANGUAGE` defaults to `pt` (Português, Brasil), and
 `TRANSCRIPTION_DIARIZATION` defaults to `1`. Credentials stay server-side;
 agent tool inputs never contain API keys.
 

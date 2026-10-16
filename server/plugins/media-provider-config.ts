@@ -1,3 +1,4 @@
+import { DEFAULT_TRANSCRIPTION_LANGUAGE } from '../../shared/transcription-language.ts';
 import { getKey } from '../keystore.ts';
 import type { TranscriptionOptions } from './transcription-types.ts';
 import type { AiVoiceOptions } from './voice-types.ts';
@@ -40,7 +41,7 @@ export function transcriptionOptions(): TranscriptionOptions {
     get elevenModel() { return getKey('ELEVENLABS_TRANSCRIPTION_MODEL') || 'scribe_v2'; },
     get cartesiaApiKey() { return getKey('CARTESIA_API_KEY'); },
     get cartesiaModel() { return getKey('CARTESIA_TRANSCRIPTION_MODEL') || 'ink-whisper'; },
-    get language() { return getKey('TRANSCRIPTION_LANGUAGE') || 'zh'; },
+    get language() { return getKey('TRANSCRIPTION_LANGUAGE') || DEFAULT_TRANSCRIPTION_LANGUAGE; },
     get diarization() { return getKey('TRANSCRIPTION_DIARIZATION') !== '0'; },
   };
 }

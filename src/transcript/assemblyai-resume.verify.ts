@@ -21,6 +21,11 @@ import {
 import type { TranscriptWord } from './types';
 
 const originalFetch = globalThis.fetch;
+// This suite exercises AssemblyAI job resumption, independent of the app default.
+const originalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: {
+  getItem: (key: string) => key === 'cc.transcriptionProvider' ? 'assemblyai' : null,
+} });
 const projectId = 'project-asr-verify';
 const providerStatus = (status: AssemblyAiProviderStatus | undefined): TranscriptionProviderStatus => {
   if (status === 'uploaded') return 'uploaded';
@@ -437,6 +442,8 @@ try {
   );
 } finally {
   globalThis.fetch = originalFetch;
+  if (originalStorage) Object.defineProperty(globalThis, 'localStorage', originalStorage);
+  else Reflect.deleteProperty(globalThis, 'localStorage');
   __resetTranscribeJobs();
   resetSharedKvMemory();
   resetTranscriptionCheckpointQueues();

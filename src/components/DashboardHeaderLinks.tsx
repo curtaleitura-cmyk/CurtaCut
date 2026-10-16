@@ -3,8 +3,8 @@ import { useT } from '../i18n/locale';
 import { theme } from '../theme';
 import { Icon } from './icons';
 
-const PROJECT_REPOSITORY_URL = 'https://github.com/0xsline/OpenChatCut';
-const AUTHOR_EMAIL = 'hl2535771@gmail.com';
+const PROJECT_REPOSITORY_URL = 'https://github.com/curtaleitura-cmyk/CurtaCut';
+const PROJECT_CONTACT_URL = 'https://github.com/curtaleitura-cmyk/CurtaCut/issues';
 const CONTACT_POPOVER_ID = 'cc-dashboard-contact';
 
 function useDismissablePopover<T extends HTMLElement>(
@@ -65,8 +65,8 @@ export function DashboardHeaderLinks() {
       {contactOpen && (
         <div id={CONTACT_POPOVER_ID} role="dialog" aria-label={t('联系作者')} style={contactPopover}>
           <span style={contactLabel}>{t('联系作者')}</span>
-          <a href={`mailto:${AUTHOR_EMAIL}`} data-cc-titlebar-control="true" style={contactEmail}>
-            {AUTHOR_EMAIL}
+          <a href={PROJECT_CONTACT_URL} target="_blank" rel="noopener noreferrer" data-cc-titlebar-control="true" style={contactEmail}>
+            GitHub Issues
           </a>
         </div>
       )}
