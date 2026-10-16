@@ -8,14 +8,14 @@ O CurtaCut é uma versão independente mantida por `curtaleitura-cmyk`. Reutiliz
 
 ## Baixar e instalar no Windows
 
-**[Baixar CurtaCut para Windows x64 — ZIP com instalador, cerca de 740 MB](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38952050526/artifacts/12070055212)**
+**[Baixar CurtaCut para Windows x64 — ZIP com instalador, cerca de 740 MB](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38982272031/artifacts/12081832427)**
 
 1. Entre na sua conta do GitHub para baixar o artefato.
-2. Extraia o ZIP e abra **`CurtaCut-0.2.17-x64.exe`**.
+2. Extraia o ZIP e abra **`CurtaCut-0.2.18-x64.exe`**.
 3. Siga o assistente de instalação e abra o CurtaCut.
-4. Nas configurações de modelos locais, baixe um modelo Whisper antes da primeira transcrição. Confira **Local** e **Português (Brasil) — pt**; preferências anteriores, se existirem, continuam sendo respeitadas.
+4. Nas configurações de modelos locais, baixe um modelo Whisper antes da primeira transcrição. No seletor da barra superior, escolha **Português (Brasil)** para a interface. Confira **Local** e **Português (Brasil) — pt**; preferências anteriores, se existirem, continuam sendo respeitadas.
 
-A instalação pelo `.exe` dispensa Git, Node.js e os comandos abaixo. O pacote inclui `SHA256SUMS.txt`. É um instalador experimental; ainda não há release estável assinada. Esse download do GitHub Actions expira em **15/11/2026**. [Ver execução e testes](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38952050526).
+A instalação pelo `.exe` dispensa Git, Node.js e os comandos abaixo. O pacote inclui `SHA256SUMS.txt`. É um instalador experimental; ainda não há release estável assinada. Esse download do GitHub Actions expira em **15/11/2026**. [Ver execução e testes](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38982272031).
 
 
 ## O que já mudou nesta versão
