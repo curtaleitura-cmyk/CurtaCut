@@ -61,14 +61,14 @@ process.env.HTTPS_PROXY = 'http://127.0.0.1:7890';
 try {
   const proxied = unreachableImportError(withCode('ECONNRESET'), REMOTE);
   assert.ok(proxied);
-  assert.match(proxied.message, /代理也连不上/, 'a proxied failure points at the proxy rules');
-  assert.doesNotMatch(proxied.message, /配置 PROXY_URL/);
+  assert.match(proxied.message, /proxy could not reach this host/, 'a proxied failure points at the proxy rules');
+  assert.doesNotMatch(proxied.message, /configure PROXY_URL/);
 } finally {
   delete process.env.HTTPS_PROXY;
 }
 
 // The message follows the interface language the browser mirrored into UI_LOCALE; unset
-// keeps the original Chinese, so nothing changes for existing installs.
+// defaults to Brazilian Portuguese, which uses English for this message.
 await setKeys({ UI_LOCALE: 'en' });
 try {
   const english = unreachableImportError(withCode('ETIMEDOUT'), REMOTE);
@@ -83,7 +83,7 @@ try {
   await setKeys({ UI_LOCALE: 'it' });
   assert.match(unreachableImportError(withCode('ENOTFOUND'), REMOTE)!.message, /Impossibile connettersi/);
   await setKeys({ UI_LOCALE: 'nonsense' });
-  assert.match(unreachableImportError(withCode('ENOTFOUND'), REMOTE)!.message, /无法连接到/, 'an unknown locale falls back to Chinese');
+  assert.match(unreachableImportError(withCode('ENOTFOUND'), REMOTE)!.message, /Could not connect to/, 'an unknown locale uses the Portuguese default with English fallback');
 } finally {
   await setKeys({ UI_LOCALE: '' });
 }

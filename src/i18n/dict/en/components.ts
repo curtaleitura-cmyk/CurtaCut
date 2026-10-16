@@ -1,6 +1,9 @@
 // EN dictionary (field fragmentation, key = Chinese original text). Data files are exempt from the upper limit of row count.
 // Cover partition: App.tsx / Editor.tsx / components root directory shell / reframe.
 export default {
+  '自动保存': 'Autosave',
+  '未命名版本': 'Unnamed version',
+  '多语言（含葡萄牙语）': 'Multilingual (including Portuguese)',
   '背景颜色': 'Background color',
   '透明度': 'Opacity',
   "字体样式": "Font style",

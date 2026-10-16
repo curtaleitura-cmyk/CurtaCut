@@ -1,4 +1,5 @@
 const overrides: Record<string, string> = {
+  '多语言（含葡萄牙语）': 'Multilingue (incluso il portoghese)',
   '选择 Fal.ai 作为默认厂商，然后选择模型。聊天中指定的模型优先于此默认值。': 'Seleziona Fal.ai come fornitore predefinito, quindi scegli un modello. Un modello richiesto esplicitamente in chat ha la precedenza su questa impostazione.',
 
   '当前版本号：{version}': 'Versione corrente: {version}',

@@ -31,7 +31,7 @@ function parseAuthorizedRoots(raw: string): string[] {
 
 export function appendAgentImportRoot(raw: string, root: string): string {
   const clean = root.trim();
-  if (!clean || /[\r\n,]/.test(clean)) throw new Error('所选目录名称不能包含逗号或换行符');
+  if (!clean || /[\r\n,]/.test(clean)) throw new Error('The selected directory name cannot contain commas or line breaks');
   return [...new Set([...parseAuthorizedRoots(raw), clean])].join(',');
 }
 
@@ -63,7 +63,7 @@ function outsideRootsError(path: string, roots: readonly string[]): AgentPathImp
   return {
     path,
     code: 'PATH_OUTSIDE_IMPORT_ROOTS',
-    error: `该路径不在已添加的本地素材目录中。已添加的目录：${roots.join(', ')}`,
+    error: `This path is outside the added local media directories. Added directories: ${roots.join(', ')}`,
   };
 }
 

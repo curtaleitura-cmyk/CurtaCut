@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { setLocale } from '../i18n/locale';
+// This fixture asserts the Chinese copy; it must not depend on the app default.
+setLocale('zh');
 import { parseToolFailures, toolFailureNoteText } from './toolFailureNote';
 
 assert.deepEqual(parseToolFailures(undefined), []);

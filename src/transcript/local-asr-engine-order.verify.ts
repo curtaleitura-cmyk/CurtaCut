@@ -4,6 +4,9 @@
 // blocked an installed desktop model behind the browser download, and the
 // combined check blocked browser users whose tier later gained a companion.
 import assert from 'node:assert/strict';
+import { setLocale } from '../i18n/locale';
+// This fixture asserts the Chinese copy; it must not depend on the app default.
+setLocale('zh');
 import { ASR_INFERENCE_CONTRACT } from '../../shared/asr-inference-contract';
 import { ASR_MODELS } from '../../shared/asr-models';
 import type { DesktopAsrRequest } from '../../shared/desktop-inference';

@@ -17,7 +17,7 @@ function proxyProbeUrl(overrides: Record<string, unknown>): string {
 export async function runDataDirProbe(overrides: Record<string, unknown>): Promise<ProbeResult> {
   const profile = runtimeProfile();
   if (process.env[DATA_DIR_ENV]?.trim()) {
-    return { ok: false, message: `目录由 ${DATA_DIR_ENV} 固定，无法在设置中修改` };
+    return { ok: false, message: `Directory pinned by ${DATA_DIR_ENV}; it cannot be changed in Settings` };
   }
   const raw = Object.hasOwn(overrides, DATA_DIR_ENV)
     ? String(overrides[DATA_DIR_ENV] ?? '')
@@ -26,19 +26,19 @@ export async function runDataDirProbe(overrides: Record<string, unknown>): Promi
   const body = await checkDataDir(raw, defaultRootDir(profile));
   const latencyMs = Date.now() - started;
   return body.ok
-    ? { ok: true, latencyMs, message: body.note ?? '目录可写' }
-    : { ok: false, latencyMs, message: body.error ?? '目录检查失败' };
+    ? { ok: true, latencyMs, message: body.note ?? 'Directory is writable' }
+    : { ok: false, latencyMs, message: body.error ?? 'Directory check failed' };
 }
 
 /** Test the saved proxy or the unsaved value currently shown in the settings field. */
 export async function runProxyProbe(overrides: Record<string, unknown>): Promise<ProbeResult> {
   const proxyUrl = proxyProbeUrl(overrides);
-  if (!proxyUrl) return { ok: false, message: '尚未填写代理地址，且未检测到系统代理环境变量' };
+  if (!proxyUrl) return { ok: false, message: 'No proxy address was entered and no system proxy environment variable was found' };
   let dispatcher: ProxyAgent;
   try {
     dispatcher = new ProxyAgent(proxyUrl);
   } catch {
-    return { ok: false, message: '代理地址格式无效，请填写 http://host:port 或 https://host:port' };
+    return { ok: false, message: 'Invalid proxy address; use http://host:port or https://host:port' };
   }
   const started = Date.now();
   try {
@@ -46,8 +46,8 @@ export async function runProxyProbe(overrides: Record<string, unknown>): Promise
       signal: AbortSignal.timeout(PROBE_TIMEOUT_MS), dispatcher,
     } as RequestInit);
     const latencyMs = Date.now() - started;
-    if (!response.ok) return { ok: false, status: response.status, latencyMs, message: `代理已连接，但外网探测返回 HTTP ${response.status}` };
-    return { ok: true, status: response.status, latencyMs, message: `代理连接成功 · 外网可达 · ${latencyMs}ms` };
+    if (!response.ok) return { ok: false, status: response.status, latencyMs, message: `Proxy connected, but the external probe returned HTTP ${response.status}` };
+    return { ok: true, status: response.status, latencyMs, message: `Proxy connected · Internet reachable · ${latencyMs}ms` };
   } catch (error) {
     return { ok: false, latencyMs: Date.now() - started, message: proxyNetworkMessage(error) };
   } finally {
@@ -56,6 +56,6 @@ export async function runProxyProbe(overrides: Record<string, unknown>): Promise
 }
 
 function proxyNetworkMessage(error: unknown): string {
-  const message = networkMessage(error).replace(/，不代表 Key 错误$/, '');
-  return `代理连接失败 · ${message}`;
+  const message = networkMessage(error).replace(/; this does not indicate an invalid key$/, '');
+  return `Proxy connection failed · ${message}`;
 }

@@ -8,17 +8,20 @@ O CurtaCut é uma versão independente mantida por `curtaleitura-cmyk`. Reutiliz
 
 ## Baixar e instalar no Windows
 
-**[Baixar CurtaCut para Windows x64 — ZIP com instalador, cerca de 740 MB](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38952050526/artifacts/12070055212)**
+**[Baixar CurtaCut para Windows x64 — ZIP com instalador, cerca de 740 MB](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38982272031/artifacts/12081832427)**
 
 1. Entre na sua conta do GitHub para baixar o artefato.
-2. Extraia o ZIP e abra **`CurtaCut-0.2.17-x64.exe`**.
+2. Extraia o ZIP e abra **`CurtaCut-0.2.18-x64.exe`**.
 3. Siga o assistente de instalação e abra o CurtaCut.
-4. Nas configurações de modelos locais, baixe um modelo Whisper antes da primeira transcrição. Confira **Local** e **Português (Brasil) — pt**; preferências anteriores, se existirem, continuam sendo respeitadas.
+4. Nas configurações de modelos locais, baixe um modelo Whisper antes da primeira transcrição. No seletor da barra superior, escolha **Português (Brasil)** para a interface. Confira **Local** e **Português (Brasil) — pt**; preferências anteriores, se existirem, continuam sendo respeitadas.
 
-A instalação pelo `.exe` dispensa Git, Node.js e os comandos abaixo. O pacote inclui `SHA256SUMS.txt`. É um instalador experimental; ainda não há release estável assinada. Esse download do GitHub Actions expira em **15/11/2026**. [Ver execução e testes](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38952050526).
+A instalação pelo `.exe` dispensa Git, Node.js e os comandos abaixo. O pacote inclui `SHA256SUMS.txt`. É um instalador experimental; ainda não há release estável assinada. Esse download do GitHub Actions expira em **15/11/2026**. [Ver execução e testes](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38982272031).
 
 
 ## O que já mudou nesta versão
+
+- **Interface em Português (Brasil)**, com inglês para os textos ainda sem tradução. Se uma preferência anterior mantiver inglês ou chinês, use o seletor de idioma na barra superior.
+- Histórico de versões: os salvamentos automáticos antigos aparecem como **Salvamento automático**. Nomes personalizados são preservados.
 
 - **Português (Brasil) — `pt`** nas opções de transcrição e como padrão em uma instalação nova.
 - **Whisper local** como provedor inicial, sem exigir chave de API paga.
@@ -27,7 +30,7 @@ A instalação pelo `.exe` dispensa Git, Node.js e os comandos abaixo. O pacote 
 - Correção dos timestamps no fallback nativo Whisper.cpp, importantes para cortar o vídeo pelo texto.
 - Identidade CurtaCut nos títulos e informações principais do aplicativo; código de instalação/atualização preparado para nosso repositório.
 
-O código de transcrição passou por testes automatizados e por um teste de áudio sintético em português brasileiro em Linux/CPU. A instalação automatizada passou no Windows; o fluxo com vídeo próprio no computador da usuária continua pendente de validação. A interface ainda não foi totalmente traduzida para português.
+O código de transcrição passou por testes automatizados e por um teste de áudio sintético em português brasileiro em Linux/CPU. A instalação automatizada passou no Windows; o fluxo com vídeo próprio no computador da usuária continua pendente de validação. A tradução para português cobre os controles principais; o restante do dicionário usa inglês. Mensagens externas de provedores e conteúdo criado pelo usuário mantêm o idioma original.
 
 ## Instalar no Windows — pelo código-fonte
 

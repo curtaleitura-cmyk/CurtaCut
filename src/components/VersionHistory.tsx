@@ -3,6 +3,7 @@ import { theme, themeAlpha } from '../theme';
 import { Icon } from './icons';
 import type { ProjectDoc } from '../editor/types';
 import { listVersions, saveVersion, deleteVersion, type ProjectVersion } from '../persist/versionStore';
+import { versionDisplayName } from '../persist/versionDisplayName';
 import { t, useT } from '../i18n/locale';
 
 interface VersionHistoryProps {
@@ -74,7 +75,7 @@ export function VersionHistory({ projectId, currentDoc, onRestore, onClose }: Ve
               <div key={v.id} style={row}>
                 <span style={{ color: theme.textDim, lineHeight: 0 }}><Icon name="clock" size={14} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.name}</div>
+                  <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{versionDisplayName(v)}</div>
                   <div style={{ fontSize: 11, color: theme.textDim }}>{relTime(v.createdAt)}</div>
                 </div>
                 <button onClick={() => { onRestore(v.doc); onClose(); }} style={ghostBtn}>{t('恢复')}</button>

@@ -51,11 +51,11 @@ assert.equal(Object.keys(PROBES).length, EXPECTED_PAGES.length, 'PROBES 有清�
 
 // 3. Status classification: Authentication / Address / Current Limiting / Others, each has a clear conclusion.
 assert.equal(classifyStatus(401, '').ok, false);
-assert.match(classifyStatus(401, '').message, /鉴权失败/);
-assert.match(classifyStatus(403, '').message, /鉴权失败/);
-assert.match(classifyStatus(404, '').message, /Base URL/);
+assert.match(classifyStatus(401, '').message, /Authentication failed/);
+assert.match(classifyStatus(403, '').message, /Authentication failed/);
+assert.match(classifyStatus(404, '').message, /base URL/);
 assert.equal(classifyStatus(429, '').ok, true);
-assert.match(classifyStatus(429, '').message, /限流/);
+assert.match(classifyStatus(429, '').message, /rate limit/);
 {
   const r = classifyStatus(500, 'boom\n  line2\ttail');
   assert.equal(r.ok, false);
@@ -65,35 +65,35 @@ assert.match(classifyStatus(429, '').message, /限流/);
 
 // 4. MiniMax base_resp:0 = success; non-0 means provider-level failure (HTTP 200 is also considered a failure); non-JSON is released.
 assert.equal(minimaxPostCheck(JSON.stringify({ base_resp: { status_code: 0 } })), null);
-assert.match(minimaxPostCheck(JSON.stringify({ base_resp: { status_code: 1004, status_msg: 'invalid api key' } })) ?? '', /1004.*鉴权失败/);
+assert.match(minimaxPostCheck(JSON.stringify({ base_resp: { status_code: 1004, status_msg: 'invalid api key' } })) ?? '', /1004.*authentication failed/);
 assert.match(minimaxPostCheck(JSON.stringify({ base_resp: { status_code: 2049 } })) ?? '', /2049/);
 assert.equal(minimaxPostCheck('not json'), null);
 
 // 5. Network layer failure copy: clearly "does not mean Key error", and timeout is worded separately.
-assert.match(networkMessage(new TypeError('fetch failed')), /网络不可达[\s\S]*不代表 Key 错误/);
-assert.match(networkMessage(Object.assign(new Error('The operation was aborted due to timeout'), { name: 'TimeoutError' })), /超时/);
+assert.match(networkMessage(new TypeError('fetch failed')), /Network unreachable[\s\S]*does not indicate an invalid key/);
+assert.match(networkMessage(Object.assign(new Error('The operation was aborted due to timeout'), { name: 'TimeoutError' })), /timed out/);
 
 // 6. runProbe exits early: Unknown page / Key is not configured and does not connect to the network (keystore is empty, synchronization will return).
 {
   const unknown = await runProbe('nope/vendor', {});
   assert.equal(unknown.ok, false);
-  assert.match(unknown.message, /暂不支持/);
+  assert.match(unknown.message, /not supported/);
   const unconfigured = await runProbe('voice/elevenlabs', {});
   assert.equal(unconfigured.ok, false);
-  assert.match(unconfigured.message, /尚未填写 API Key/);
+  assert.match(unconfigured.message, /Enter an API key/);
   // Doubao needs its API key: empty overrides stay unconfigured
   const half = await runProbe('voice/doubao', { DOUBAO_TTS_API_KEY: ' ' });
-  assert.match(half.message, /尚未填写 API Key/);
+  assert.match(half.message, /Enter an API key/);
 }
 
 // 7. Proxy page uses its own connectivity semantics rather than provider/API-key language.
 {
   const missing = await runProxyProbe({ PROXY_URL: '' });
   assert.equal(missing.ok, false);
-  assert.match(missing.message, /尚未填写代理地址/);
+  assert.match(missing.message, /No proxy address/);
   const malformed = await runProxyProbe({ PROXY_URL: 'not a proxy url' });
   assert.equal(malformed.ok, false);
-  assert.match(malformed.message, /代理地址格式无效/);
+  assert.match(malformed.message, /Invalid proxy address/);
 }
 
 // 7. Media probes normalize Base URLs exactly like the runtime: keep an existing version suffix and add a missing one.
@@ -186,10 +186,10 @@ assert.match(networkMessage(Object.assign(new Error('The operation was aborted d
 {
   const unset = await runProbe('storage/local', {});
   assert.equal(unset.ok, true);
-  assert.match(unset.message, /默认目录 .*public[/\\]media[/\\]uploads/); // The copy has a machine-related absolute path and only anchors the tail section.
+  assert.match(unset.message, /default directory .*public[/\\]media[/\\]uploads/); // The copy has a machine-related absolute path and only anchors the tail section.
   const relative = await runProbe('storage/local', { MEDIA_DIR: 'relative/path' });
   assert.equal(relative.ok, false);
-  assert.match(relative.message, /绝对路径/);
+  assert.match(relative.message, /absolute path/);
   assert.doesNotMatch(relative.message, /HTTP/);
 }
 
@@ -199,17 +199,17 @@ assert.match(networkMessage(Object.assign(new Error('The operation was aborted d
 {
   const unset = await runProbe('storage/projects', { OPENCHATCUT_DATA_DIR: '' });
   assert.equal(unset.ok, true);
-  assert.match(unset.message, /默认目录 .*\.openchatcut/); // machine-dependent absolute path, anchor the tail only
+  assert.match(unset.message, /default directory .*\.openchatcut/); // machine-dependent absolute path, anchor the tail only
 
   const relative = await runProbe('storage/projects', { OPENCHATCUT_DATA_DIR: 'relative/saves' });
   assert.equal(relative.ok, false);
-  assert.match(relative.message, /绝对路径/);
+  assert.match(relative.message, /absolute path/);
   assert.doesNotMatch(relative.message, /HTTP/);
 
   const target = join(fixtureHome, 'Saves');
   const writable = await runProbe('storage/projects', { OPENCHATCUT_DATA_DIR: target });
   assert.equal(writable.ok, true);
-  assert.match(writable.message, /目录可写/);
+  assert.match(writable.message, /Directory is writable/);
 
   // Without the field in the payload, the probe tests the root already recorded by the
   // settings UI, so "test connection" answers for the storage actually in use.
@@ -223,7 +223,7 @@ assert.match(networkMessage(Object.assign(new Error('The operation was aborted d
   // A Windows path interpolated into a RegExp loses separators to escape
   // sequences ("\T", "\S"), so match the recorded path literally.
   assert.ok(
-    recorded.message.includes(`目录可写 · ${target}`),
+    recorded.message.includes(`Directory is writable · ${target}`),
     `expected the recorded root to be reported, got: ${recorded.message}`,
   );
 
@@ -231,7 +231,7 @@ assert.match(networkMessage(Object.assign(new Error('The operation was aborted d
   try {
     const pinned = await runProbe('storage/projects', { OPENCHATCUT_DATA_DIR: join(fixtureHome, 'Elsewhere') });
     assert.equal(pinned.ok, false);
-    assert.match(pinned.message, /固定/);
+    assert.match(pinned.message, /pinned/);
   } finally {
     delete process.env.OPENCHATCUT_DATA_DIR;
   }

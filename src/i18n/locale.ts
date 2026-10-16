@@ -1,47 +1,37 @@
 // Language status + t(): The original Chinese text is the key (no additional key namespace is created),
-// if the active-language dictionary cannot be found, it will fall back to Chinese.
+// Missing Brazilian Portuguese UI copy falls back to English.
 // Never go blank. Switch persistence localStorage('cc.locale'), subscription rerendering (useSyncExternalStore).
 // Rules: Use useT() (subscription switching) in React components; pure helper modules can directly import { t }
 //  — As long as the component that renders its output calls useT(), it will be recalculated when switching languages.
 // LLM interface (systemPrompt/tool ​​description/skill content) and persistent dynamic history tags do not enter i18n.
-// Default language: the saved choice wins; otherwise the system language (zh/ru), and English for everything else.
+// The saved choice wins; new installations default to Brazilian Portuguese.
 import { useSyncExternalStore } from 'react';
 import { ensureLocaleDict, localeDictReady, localeDicts } from './dictRegistry';
 
 export { ensureLocaleDict } from './dictRegistry';
 
-export type Locale = 'zh' | 'en' | 'it' | 'ru';
+export type Locale = 'pt-BR' | 'zh' | 'en' | 'it' | 'ru';
 
-export const ALL_LOCALES: readonly Locale[] = ['zh', 'en', 'it', 'ru'];
+export const ALL_LOCALES: readonly Locale[] = ['pt-BR', 'en', 'it', 'ru', 'zh'];
 
 const STORAGE_KEY = 'cc.locale';
 const DOCUMENT_LANG: Record<Locale, string> = {
+  'pt-BR': 'pt-BR',
   zh: 'zh-CN',
   en: 'en',
   it: 'it',
   ru: 'ru',
 };
 
-function systemLocale(): Locale {
-  try {
-    const tag = String(navigator.language ?? '').toLowerCase();
-    if (tag.startsWith('zh')) return 'zh';
-    if (tag.startsWith('it')) return 'it';
-    if (tag.startsWith('ru')) return 'ru';
-    return 'en';
-  } catch {
-    return 'en';
-  }
-}
-
 function readInitial(): Locale {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === 'pt-BR' || stored === 'pt' || stored === 'pt-br') return 'pt-BR';
     if (stored === 'zh' || stored === 'en' || stored === 'it' || stored === 'ru') return stored;
   } catch {
-    // Private mode / storage disabled → system language below.
+    // Private mode / storage disabled → Brazilian Portuguese below.
   }
-  return systemLocale();
+  return 'pt-BR';
 }
 
 let current: Locale = readInitial();
@@ -58,7 +48,8 @@ export function subscribeLocale(onChange: () => void): () => void {
   return () => { subscribers.delete(onChange); };
 }
 
-export function localeLanguageName(locale: Locale): 'Chinese' | 'English' | 'Italian' | 'Russian' {
+export function localeLanguageName(locale: Locale): 'Brazilian Portuguese' | 'Chinese' | 'English' | 'Italian' | 'Russian' {
+  if (locale === 'pt-BR') return 'Brazilian Portuguese';
   if (locale === 'zh') return 'Chinese';
   if (locale === 'it') return 'Italian';
   if (locale === 'ru') return 'Russian';
@@ -87,7 +78,7 @@ export function setLocale(next: Locale): void {
   if (typeof document !== 'undefined') {
     document.documentElement.lang = DOCUMENT_LANG[next];
   }
-  // Switch the UI now — an unloaded dictionary renders the Chinese original
+  // Switch the UI now — an unloaded dictionary renders the English fallback
   // rather than nothing — then re-render once the dictionary lands. In practice
   // prefetchLocaleDicts() has already loaded it and no second pass happens.
   notifySubscribers();

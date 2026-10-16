@@ -4,7 +4,7 @@
 // Whisper is OpenAI's open-source model, so the official OpenAI mark is used.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { theme } from '../../theme';
-import { useT } from '../../i18n/locale';
+import { getLocale, useT } from '../../i18n/locale';
 import { warmUpLocalAsr } from '../../transcript/local-asr';
 import { asrBackendPreference } from '../../transcript/deviceProfile';
 import { VendorIcon } from './vendorIcons';
@@ -254,7 +254,7 @@ export function LocalAsrPane({ fields, ctx }: { fields: readonly SettingsField[]
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 12.5, fontWeight: 600 }}>{m.label}</div>
                 <div style={{ fontSize: 11, color: theme.textDim }}>
-                  {m.language}{m.sizeLabel ? ` · ${m.sizeLabel}` : ''}{modelSizeText(m.bytes)}
+                  {getLocale() === 'zh' ? m.language : t('多语言（含葡萄牙语）')}{m.sizeLabel ? ` · ${m.sizeLabel.replace(/^约\s*/, '~')}` : ''}{modelSizeText(m.bytes)}
                 </div>
               </div>
               <span style={{ fontSize: 11, color: status.color, whiteSpace: 'nowrap' }}>{status.text}</span>

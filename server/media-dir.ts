@@ -386,17 +386,17 @@ export async function checkMediaDir(
   if (isIsolatedDevProfile(profile)) {
     return { ok: false, error: '隔离开发配置固定使用独立素材目录，不能修改 MEDIA_DIR' };
   }
-  if (!raw.trim()) return { ok: true, note: `未设置 · 使用默认目录 ${profile.mediaDir}` };
+  if (!raw.trim()) return { ok: true, note: `Not set · Using default directory ${profile.mediaDir}` };
   const dir = expandMediaDir(raw);
-  if (!dir) return { ok: false, error: '必须是绝对路径（可用 ~/ 开头）' };
+  if (!dir) return { ok: false, error: 'An absolute path is required (~/ is supported)' };
   try {
     await mkdir(dir, { recursive: true });
     const probe = join(dir, `.cc-dir-probe-${process.pid}`);
     await writeFile(probe, 'ok');
     await unlink(probe);
-    return { ok: true, note: `目录可写 · ${dir}` };
+    return { ok: true, note: `Directory is writable · ${dir}` };
   } catch (err) {
-    return { ok: false, error: `目录不可写 · ${err instanceof Error ? err.message : String(err)}` };
+    return { ok: false, error: `Directory is not writable · ${err instanceof Error ? err.message : String(err)}` };
   }
 }
 

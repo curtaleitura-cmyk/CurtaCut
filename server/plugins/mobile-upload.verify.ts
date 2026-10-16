@@ -99,6 +99,12 @@ try {
   assert.equal(reboundDelete.status, 401);
   assert.equal(deletes, 1, 'matching attacker Host and Origin cannot delete a session');
 
+  const portuguese = await fetch(`${origin}/sessions?locale=pt-BR`, {
+    method: 'POST', headers: { origin },
+  });
+  assert.equal(portuguese.status, 201);
+  assert.equal(createdLocales.at(-1), 'en', 'Portuguese uses English mobile copy rather than Chinese');
+
   const russian = await fetch(`${origin}/sessions?locale=ru`, {
     method: 'POST', headers: { origin },
   });
@@ -107,7 +113,7 @@ try {
     method: 'POST', headers: { origin },
   });
   assert.equal(italian.status, 201);
-  assert.deepEqual(createdLocales, ['en', 'ru', 'it']);
+  assert.deepEqual(createdLocales, ['en', 'en', 'ru', 'it']);
 } finally {
   await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
 }

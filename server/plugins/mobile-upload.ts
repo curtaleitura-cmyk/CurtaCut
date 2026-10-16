@@ -15,7 +15,7 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
 type MobileUploadControls = Pick<MobileUploadService, 'createSession' | 'getSession' | 'closeSession'>;
 
 function mobilePageLocale(value: string | null): 'zh' | 'en' | 'it' | 'ru' {
-  return value === 'en' || value === 'it' || value === 'ru' ? value : 'zh';
+  return value === 'zh' || value === 'it' || value === 'ru' ? value : 'en';
 }
 
 function mobileUploadControlAuthorized(req: IncomingMessage, res: ServerResponse): boolean {
