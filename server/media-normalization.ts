@@ -83,7 +83,7 @@ export async function resolveNormalizeTargetKey(
 
 export const normalizeAdmission = createNormalizeAdmission();
 
-function run(
+export function runNormalizationProcess(
   cmd: string,
   args: string[],
   timeoutMs: number,
@@ -135,6 +135,8 @@ export interface ProbeMeta {
   audioCodec: string;
   hasAudio: boolean;
   audioStreamIndex?: number;
+  audioChannels?: number;
+  audioProfile?: string;
   hasSpatialAudio?: boolean;
   sourceBitrate: number;
   size: number;
@@ -213,7 +215,7 @@ export function rotationOf(video: Record<string, unknown>): number {
 
 
 export async function probeVideo(path: string, signal?: AbortSignal): Promise<ProbeMeta> {
-  const { stdout } = await run(
+  const { stdout } = await runNormalizationProcess(
     ffprobeBin(),
     [
       '-v', 'error',
@@ -257,6 +259,8 @@ export async function probeVideo(path: string, signal?: AbortSignal): Promise<Pr
     hasAudio: audio !== undefined,
     audioStreamIndex: Number.isInteger(audio?.index) && Number(audio?.index) >= 0 ? Number(audio?.index) : undefined,
     hasSpatialAudio,
+    audioChannels: Number(audio?.channels) || undefined,
+    audioProfile: typeof audio?.profile === 'string' ? audio.profile : undefined,
     sourceBitrate,
     size,
     avgFrameRate,
@@ -270,8 +274,10 @@ function compatibleVideoCodec(codec: string): boolean {
   return ['h264', 'avc', 'avc1', 'hevc', 'h265', 'hev1', 'hvc1', 'vp8', 'vp9', 'av1'].includes(codec.toLowerCase());
 }
 
-function compatibleAudioCodec(codec: string): boolean {
-  if (!codec) return true;
+function compatibleAudioCodec(codec: string, channels?: number, profile?: string): boolean {
+  if (['aac', 'mp4a'].includes(codec.toLowerCase())
+    && ((channels ?? 2) > 2 || (profile !== undefined && profile !== 'LC'))) return false;
+  if (!codec) return false;
   return ['aac', 'flac', 'mp3', 'mp4a', 'opus', 'vorbis'].includes(codec.toLowerCase());
 }
 
@@ -281,13 +287,13 @@ export interface NormalizeStreamPlan {
 }
 
 export function resolveStreamPlan(
-  meta: Pick<ProbeMeta, 'videoCodec' | 'audioCodec' | 'hasAudio'>,
+  meta: Pick<ProbeMeta, 'videoCodec' | 'audioCodec' | 'hasAudio' | 'audioChannels' | 'audioProfile'>,
   optimizeOutput: boolean,
   convertToCfr: boolean,
 ): NormalizeStreamPlan {
   return {
     transcodeVideo: optimizeOutput || convertToCfr || !compatibleVideoCodec(meta.videoCodec),
-    transcodeAudio: meta.hasAudio && (optimizeOutput || !compatibleAudioCodec(meta.audioCodec)),
+    transcodeAudio: meta.hasAudio && (optimizeOutput || !compatibleAudioCodec(meta.audioCodec, meta.audioChannels, meta.audioProfile)),
   };
 }
 
@@ -325,7 +331,7 @@ export function normalizeReason(
   if (!compatibleVideoCodec(meta.videoCodec)) {
     return `video codec ${meta.videoCodec || 'unknown'} is not browser-aligned`;
   }
-  if (meta.hasAudio && !compatibleAudioCodec(meta.audioCodec)) {
+  if (meta.hasAudio && !compatibleAudioCodec(meta.audioCodec, meta.audioChannels, meta.audioProfile)) {
     return `audio codec ${meta.audioCodec || 'unknown'} is not browser-aligned`;
   }
   if (meta.hasSpatialAudio) return 'select stereo compatibility track from spatial audio';
@@ -385,7 +391,7 @@ async function encodeTranscodedVideo(
       ...audioArgs, ...outputArgs,
     ];
     try {
-      await run(ffmpeg, args, FFMPEG_TIMEOUT_MS, signal);
+      await runNormalizationProcess(ffmpeg, args, FFMPEG_TIMEOUT_MS, signal);
       return;
     } catch (error) {
       throwIfNormalizationAborted(signal);
@@ -424,11 +430,11 @@ export async function encodeNormalized(
   ];
   throwIfNormalizationAborted(signal);
   const audioArgs = !meta.hasAudio ? [] : streamPlan.transcodeAudio
-    ? ['-c:a', 'aac', '-b:a', VIDEO_AUDIO_BITRATE]
+    ? ['-c:a', 'aac', '-profile:a', 'aac_low', '-ac', '2', '-ar', '48000', '-b:a', VIDEO_AUDIO_BITRATE]
     : ['-c:a', 'copy'];
   const outputArgs = ['-avoid_negative_ts', 'make_zero', '-movflags', '+faststart', outputPath];
   if (!streamPlan.transcodeVideo) {
-    await run(ffmpeg, [...commonArgs, '-c:v', 'copy', ...audioArgs, ...outputArgs], FFMPEG_TIMEOUT_MS, signal);
+    await runNormalizationProcess(ffmpeg, [...commonArgs, '-c:v', 'copy', ...audioArgs, ...outputArgs], FFMPEG_TIMEOUT_MS, signal);
     return;
   }
   await encodeTranscodedVideo(

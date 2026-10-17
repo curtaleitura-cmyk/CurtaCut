@@ -306,7 +306,7 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
               ...copyTranscriptIdentity(asset),
             };
         const state = activeTimeline(getDoc());
-        const autoSize = state.autoSizeFromFirstVideo === true && state.items.length === 0
+        const autoSize = state.autoSizeFromFirstVideo === true && state.items.every(item => item.kind === 'audio')
           && !state.captions && !captionTrackEntries(state).some(entry => entry.captions) && asset.kind === 'video'
           && Number.isFinite(asset.width) && Number.isFinite(asset.height)
           && asset.width! > 0 && asset.height! > 0;

@@ -1,3 +1,4 @@
+import { AUDIO_EXTENSIONS } from '../../shared/media-formats';
 export type MediaKind = 'video' | 'image' | 'audio' | 'gif' | 'svg';
 
 export interface MediaMetadata {
@@ -10,7 +11,6 @@ const IMAGE_SECONDS = 5;
 const GIF_SECONDS_FALLBACK = 5;
 const VIDEO_EXTENSIONS = ['.mp4', '.m4v', '.mov', '.webm'];
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.avif', '.heic', '.heif'];
-const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.aac', '.ogg', '.opus', '.flac'];
 
 export function kindOfDescriptor(rawName: string, rawType = ''): MediaKind | null {
   const name = rawName.toLowerCase();

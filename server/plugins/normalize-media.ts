@@ -1,4 +1,5 @@
 // POST /api/normalize-media — compatibility normalization with opt-in media optimization.
+import { normalizeAudioFile } from '../audio-normalization.ts';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin } from 'vite';
 import { basename, extname, join } from 'node:path';
@@ -68,6 +69,7 @@ export interface NormalizeMediaPluginOptions {
 
 interface NormalizeRequestBody {
   readonly src?: string;
+  readonly mediaKind?: 'video' | 'audio';
   readonly force?: boolean;
   readonly optimize?: boolean;
   readonly forceCfr?: boolean;
@@ -230,6 +232,17 @@ async function handleNormalizeRequest(
     return;
   }
   const extension = extname(name).toLowerCase();
+  if (body.mediaKind === 'audio') {
+    const abort = bindRequestAbort(req, res);
+    try {
+      const result = await normalizeAudioFile({ inputPath, publicSrc: src, outputDirectory: uploadDir(),
+        signal: abort.signal, admission: options.admission });
+      if (!abort.signal.aborted) sendJson(res, 200, { ok: true, ...result });
+    } catch (error) {
+      if (!abort.signal.aborted) sendNormalizeError(res, error, message => logger.error(message));
+    } finally { abort.dispose(); }
+    return;
+  }
   if (isPassthrough(name)) {
     sendJson(res, 200, { ok: true, path: src, normalized: false, reason: 'not a video master' });
     return;

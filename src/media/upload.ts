@@ -180,12 +180,13 @@ const newId = () => (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypt
 /** Post-upload conditional compress (server ffmpeg). No-op for already-efficient sources. */
 export async function normalizeUploadedVideo(
   src: string,
+  mediaKind: 'video' | 'audio' = 'video',
 ): Promise<{ src: string; width?: number; height?: number; durationSeconds?: number; fps?: number }> {
   try {
     const res = await fetch('/api/normalize-media', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ src }),
+      body: JSON.stringify({ src, ...(mediaKind === 'audio' ? { mediaKind } : {}) }),
     });
     const data = (await res.json()) as {
       path?: string;
@@ -209,7 +210,8 @@ export async function normalizeUploadedVideo(
     throw new Error('server returned no media path');
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    throw new Error(t('视频兼容性处理失败：{error}', { error: message }));
+    throw new Error(mediaKind === 'audio' ? `Audio compatibility processing failed: ${message}`
+      : t('视频兼容性处理失败：{error}', { error: message }));
   }
 }
 
@@ -351,7 +353,7 @@ async function resolveReadySource(
   uploaded: UploadedMediaImport,
 ): Promise<ReadyMediaSource> {
   const { fps, kind, meta } = prepared;
-  if (!shouldNormalizeImportedVideo(kind, uploaded.desktopImport)) {
+  if (kind !== 'audio' && !shouldNormalizeImportedVideo(kind, uploaded.desktopImport)) {
     return {
       src: uploaded.src,
       width: meta.width,
@@ -359,7 +361,7 @@ async function resolveReadySource(
       durationInFrames: meta.durationInFrames,
     };
   }
-  const normalized = await normalizeUploadedVideo(uploaded.src);
+  const normalized = await normalizeUploadedVideo(uploaded.src, kind === 'audio' ? 'audio' : 'video');
   return {
     src: normalized.src,
     width: normalized.width ?? meta.width,
