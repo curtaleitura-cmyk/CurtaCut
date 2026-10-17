@@ -1,3 +1,4 @@
+import { abortable } from './transcriptionActivity';
 import { DEFAULT_TRANSCRIPTION_LANGUAGE } from '../../shared/transcription-language';
 // On-device ASR transcriber (whisper via transformers.js in a WebWorker).
 // Reuses the shared audio-extract pipeline (/api/extract-audio → 16 kHz mono);
@@ -123,8 +124,9 @@ export class LocalAsrClient {
   }
 
   /** Load the requested model after any in-flight warm-up finishes. */
-  async ensureLoaded(config: AsrConfig): Promise<void> {
-    while (this.loading) await this.loading;
+  async ensureLoaded(config: AsrConfig, signal?: AbortSignal): Promise<void> {
+    signal?.throwIfAborted();
+    while (this.loading) { await this.loading; signal?.throwIfAborted(); }
     if (this.config?.device === config.device
       && this.config.modelId === config.modelId
       && this.config.revision === config.revision) return;
@@ -144,6 +146,7 @@ export class LocalAsrClient {
         );
         this.config = config;
       } catch (webgpuError) {
+        signal?.throwIfAborted();
         if (config.device !== 'webgpu') throw webgpuError;
         // A half-initialized WebGPU session can corrupt the wasm fallback.
         this.dispose();
@@ -256,8 +259,8 @@ function reportModelProgress(
   progress?: number,
   file?: string,
 ): void {
-  if (progress != null) onWait?.(`模型下载 ${Math.min(100, Math.round(progress))}%`);
-  else if (file) onWait?.(`加载模型 ${file.split('/').pop() ?? ''}`);
+  if (progress != null) onWait?.(t('Downloading model: {percent}%', { percent: Math.min(100, Math.round(progress)) }));
+  else if (file) onWait?.(t('Loading model: {file}', { file: file.split('/').pop() ?? '' }));
 }
 
 async function runTranscriptionStage<T>(stage: string, operation: () => Promise<T>): Promise<T> {
@@ -289,8 +292,13 @@ async function tryNativeEngine(
   const native = await tryDesktopNativeAsr({
     sourcePath: await transcriptionSourceForPath(path, opts),
     config,
+    signal: opts.signal,
     language: opts.languageCode ?? DEFAULT_TRANSCRIPTION_LANGUAGE,
-    onProgress: (progress, file) => reportModelProgress(onWait, progress, file),
+    onProgress: (progress, file) => {
+      const stage = file?.startsWith('@') ? file.slice(1) : 'loading';
+      opts.onProgress?.({ stage: stage === 'preparing' ? 'preparing' : stage === 'transcribing' ? 'transcribing' : 'loading', percent: progress, model: config.modelId });
+      if (!file?.startsWith('@')) reportModelProgress(onWait, progress, file);
+    },
     onFallback: (reason) => {
       failure = reason;
       onWait?.(t('桌面原生推理不可用，已回退浏览器引擎'));
@@ -307,6 +315,8 @@ export async function localTranscribePathResumable(
   onWait?: (note?: string) => void,
   opts: TranscribeOptions = {},
 ): Promise<TranscriptResult> {
+  opts.signal?.throwIfAborted();
+  opts.onProgress?.({ stage: 'preparing' });
   const providerJobId = resume.providerJobId ?? `local:${Date.now().toString(36)}`;
   const checkpoint: LocalAsrCheckpoint = { ...resume, providerJobId, providerStatus: 'processing' };
   await onCheckpoint(checkpoint);
@@ -319,25 +329,43 @@ export async function localTranscribePathResumable(
   // export for the browser fallback.
   const status = await fetchLocalAsrModelStatus(config.modelId);
   const nativeEnabled = desktopNativeInferenceEnabled();
+  opts.signal?.throwIfAborted();
+  opts.onProgress?.({ stage: 'loading', model: config.modelId });
   const native = nativeEnabled ? await tryNativeEngine(path, opts, config, status, onWait) : {};
   if (native.result) {
     await onCheckpoint({ ...checkpoint, providerStatus: 'completed' });
     return toTranscriptResult(native.result);
   }
+  opts.signal?.throwIfAborted();
   assertBrowserAsrReady(config, status, { enabled: nativeEnabled, failure: native.failure });
+  opts.onProgress?.({ stage: 'preparing', model: config.modelId });
   const source = await runTranscriptionStage(t('音轨准备'), () => transcriptionSourceForPath(path, opts, true));
   const samples = await runTranscriptionStage(t('音频解码'), () => decodeSourceToSamples(source));
   if (!hasTranscribableSignal(samples, TARGET_SR)) {
     await onCheckpoint({ ...checkpoint, providerStatus: 'completed' });
     return toTranscriptResult({ text: '', chunks: [] });
   }
+  opts.signal?.throwIfAborted();
   const client = getSharedClient();
-  client.attachProgress((progress, file) => reportModelProgress(onWait, progress, file));
-  await runTranscriptionStage(t('模型加载'), () => client.ensureLoaded(config));
-  await onCheckpoint({ ...checkpoint, providerStatus: 'processing' });
-  const result = await runTranscriptionStage(t('模型推理'), () => client.transcribe(samples, opts.languageCode ?? DEFAULT_TRANSCRIPTION_LANGUAGE));
-  await onCheckpoint({ ...checkpoint, providerStatus: 'completed' });
-  return toTranscriptResult(result);
+  let inference = false;
+  client.attachProgress((progress, file) => {
+    opts.onProgress?.({ stage: inference ? 'transcribing' : 'loading', percent: progress, model: config.modelId });
+    if (!inference) reportModelProgress(onWait, progress, file);
+  });
+  const abort = () => { client.dispose(); if (sharedClient === client) sharedClient = null; };
+  opts.signal?.addEventListener('abort', abort, { once: true });
+  try {
+    opts.signal?.throwIfAborted();
+    opts.onProgress?.({ stage: 'loading', model: config.modelId });
+    await runTranscriptionStage(t('模型加载'), () => client.ensureLoaded(config, opts.signal));
+    await onCheckpoint({ ...checkpoint, providerStatus: 'processing' });
+    inference = true;
+    opts.onProgress?.({ stage: 'transcribing', model: config.modelId });
+    const pending = runTranscriptionStage(t('模型推理'), () => client.transcribe(samples, opts.languageCode ?? DEFAULT_TRANSCRIPTION_LANGUAGE));
+    const result = opts.signal ? await abortable(pending, opts.signal) : await pending;
+    await onCheckpoint({ ...checkpoint, providerStatus: 'completed' });
+    return toTranscriptResult(result);
+  } finally { opts.signal?.removeEventListener('abort', abort); client.attachProgress(() => {}); }
 }
 
 export async function localTranscribePath(

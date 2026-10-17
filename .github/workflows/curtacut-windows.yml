@@ -51,6 +51,15 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --import tsx server/media-audio-selection.verify.ts
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify manual transcription and activity controls
+        shell: pwsh
+        run: |
+          node --import tsx src/transcript/auto-transcribe-ingest.verify.ts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --import tsx src/transcript/transcriptionActivity.verify.ts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --import tsx src/transcript/desktop-native-asr.verify.ts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Lint
         run: npm run lint
       - name: Prepare rendering browser

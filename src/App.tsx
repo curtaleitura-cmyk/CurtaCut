@@ -1,3 +1,4 @@
+import { TranscriptionActivityPanel } from './transcript/TranscriptionActivityPanel';
 
 import { useT } from './i18n/locale';
 import {
@@ -20,7 +21,7 @@ export default function App() {
 
   if (!projects) return <AppSplash text={t('加载中…')} />;
   if (route.name === 'editor') {
-    return <EditorRoute route={route} projects={projects} refresh={refresh} />;
+    return <><EditorRoute route={route} projects={projects} refresh={refresh} /><TranscriptionActivityPanel /></>;
   }
-  return <DashboardRoute projects={projects} refresh={refresh} />;
+  return <><DashboardRoute projects={projects} refresh={refresh} /><TranscriptionActivityPanel /></>;
 }

@@ -1,3 +1,4 @@
+import { shouldAutoTranscribeIngest } from '../transcript/provider';
 import type { MediaAsset, MediaAssetKind } from '../editor/types';
 import { t } from '../i18n/locale';
 import { putMediaBlob } from '../persist/mediaBlobStore';
@@ -328,10 +329,11 @@ async function uploadPreparedMedia(
       asrPath: Promise.resolve(null),
     };
   }
-  const clientAsr = kind === 'video' || kind === 'audio'
+  const prepareAsr = shouldAutoTranscribeIngest() && (kind === 'video' || kind === 'audio');
+  const clientAsr = prepareAsr
     ? extractAsrFromFile(file, kind).catch(() => null)
     : Promise.resolve(null);
-  const asrPath = kind === 'video' || kind === 'audio'
+  const asrPath = prepareAsr
     ? Promise.any([
       clientAsr.then((path) => { if (!path) throw new Error('client-asr-miss'); return path; }),
       extractAudioForAsr(transferred.src).then((path) => {

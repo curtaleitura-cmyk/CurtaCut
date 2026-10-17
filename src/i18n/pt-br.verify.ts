@@ -30,6 +30,10 @@ assert.ok(Object.keys(PT_BR).length > 350, 'Portuguese covers the main editor co
 for (const key of Object.keys(EN)) assert.doesNotMatch(t(key), /[\u3400-\u9fff]/u, `Chinese UI fallback: ${key}`);
 const fallback = Object.keys(EN).find(key => !(key in PT_BR))!;
 assert.equal(t(fallback), EN[fallback]);
+assert.equal(t('Untitled project'), 'Projeto sem título');
+assert.equal(t('Sequence {n}', { n: 1 }), 'Sequência 1');
+assert.equal(t('Long Video to Shorts'), 'Vídeo longo em vídeos curtos');
+assert.doesNotMatch(t('把一条长播客、访谈、课程或直播剪成适合社媒发布的短视频和高光。'), /[\u3400-\u9fff]/u);
 assert.equal(tData('Meu projeto'), 'Meu projeto', 'user data is preserved');
 assert.equal(parseUiLocale('pt-BR'), 'pt-BR');
 assert.equal(parseUiLocale('pt'), 'pt-BR');

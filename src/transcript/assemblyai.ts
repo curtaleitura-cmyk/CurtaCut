@@ -1,3 +1,5 @@
+import { t } from '../i18n/locale';
+import type { TranscriptionProgress } from './transcriptionActivity';
 import { DEFAULT_TRANSCRIPTION_LANGUAGE } from '../../shared/transcription-language';
 // AssemblyAI transcription client. All calls go through the Vite proxy
 // (/assemblyai → api.assemblyai.com) which injects the API key server-side, so
@@ -77,6 +79,9 @@ async function uploadLocalPath(path: string): Promise<string> {
 }
 
 export interface TranscribeOptions {
+  signal?: AbortSignal;
+  label?: string;
+  onProgress?: (value: TranscriptionProgress) => void;
   /**
    * ISO-639-1. Default `zh` for this product (Chinese oral broadcast).
    * Pass `auto` to use AssemblyAI language_detection instead.
@@ -141,15 +146,17 @@ async function poll(
   onWait?: (note?: string) => void,
   onCheckpoint?: AssemblyAiCheckpointWriter,
   resume: AssemblyAiResumeCheckpoint = {},
+  signal?: AbortSignal,
 ): Promise<TranscriptResult> {
   // A provider job stuck in queued/processing must not poll forever (and
   // re-enter the same loop on every reload via the resume checkpoint).
   const deadline = Date.now() + ASSEMBLYAI_POLL_DEADLINE_MS;
   for (;;) {
+    signal?.throwIfAborted();
     if (Date.now() > deadline) {
       throw new Error('transcription timed out while waiting for the provider; please retry');
     }
-    const r = await serviceFetch(`${BASE}/transcript/${id}`);
+    const r = await serviceFetch(`${BASE}/transcript/${id}`, { signal });
     if (!r.ok) throw new Error(`poll failed: HTTP ${r.status}`);
     const d = await r.json();
     const providerStatus = String(d.status ?? 'processing') as AssemblyAiProviderStatus;
@@ -178,7 +185,7 @@ async function poll(
     }
     if (d.status === 'error') throw new Error(d.error ?? 'transcription error');
     const waited = Math.max(0, Math.round((ASSEMBLYAI_POLL_DEADLINE_MS - (deadline - Date.now())) / 1000));
-    onWait?.(`云端转写中（${String(d.status)}，已等待 ${waited}s）`);
+    onWait?.(t('Cloud transcription: {status}, waiting {seconds}s', { status: String(d.status), seconds: waited }));
     await new Promise((res) => setTimeout(res, 2500));
   }
 }
@@ -335,9 +342,11 @@ export async function transcribePathResumable(
     let uploadUrl = checkpoint.uploadUrl;
     if (!uploadUrl) {
       uploadUrl = await uploadTranscriptionPath(path, opts);
+      opts.signal?.throwIfAborted();
       checkpoint = { ...checkpoint, uploadUrl, providerStatus: 'uploaded' };
       await onCheckpoint(checkpoint);
     }
+    opts.signal?.throwIfAborted();
     providerJobId = await createTranscript(uploadUrl, opts);
     checkpoint = {
       ...checkpoint,
@@ -351,7 +360,7 @@ export async function transcribePathResumable(
   return poll(providerJobId, onWait, async (next) => {
     checkpoint = next;
     await onCheckpoint(next);
-  }, checkpoint);
+  }, checkpoint, opts.signal);
 }
 
 export async function transcribePath(

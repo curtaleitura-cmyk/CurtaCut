@@ -45,7 +45,7 @@ const COMMON_TRANSCRIPTION_FIELDS: readonly SettingsField[] = [
     name: 'AUTO_TRANSCRIBE_INGEST',
     label: '导入后自动转写',
     kind: 'select',
-    defaultLabel: '仅本地引擎（免费）',
+    defaultLabel: '关闭（手动转写）',
     note: '素材进入媒体池后是否立即转写。本地 Whisper 免费且在本机运行；云端付费供应商建议保持关闭或手动转写。',
     options: [
       { value: 'off', label: '关闭（手动转写）' },

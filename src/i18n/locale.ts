@@ -61,7 +61,8 @@ export function localizedCatalogText(
   chinese: string,
   locale: Locale = current,
 ): string {
-  return locale === 'zh' ? chinese : english;
+  if (locale === 'zh') return chinese;
+  return locale === 'pt-BR' ? localeDicts(locale).ui[english] ?? english : english;
 }
 
 function notifySubscribers(): void {

@@ -147,3 +147,19 @@ assert.equal(await tryDesktopNativeAsr({
 }), null, 'non-media paths must stay on the browser path');
 
 console.log('desktop-native-asr.verify: auto-enable, opt-out, and browser fallback contracts OK');
+
+// Cancellation reaches the native process and must never trigger a browser fallback.
+shouldFail = false;
+const controller = new AbortController();
+const started = Promise.withResolvers<void>();
+const nativeResult = Promise.withResolvers<Awaited<ReturnType<typeof inference.transcribe>>>();
+let cancelled = false;
+inference.transcribe = async () => { started.resolve(); return nativeResult.promise; };
+inference.cancel = async () => { cancelled = true; nativeResult.reject(new Error('native cancelled')); };
+const attempt = tryDesktopNativeAsr({ sourcePath: '/media/uploads/cancel.mp4', config, language: 'pt',
+  signal: controller.signal, onFallback: () => assert.fail('cancellation must not start browser fallback') });
+await started.promise;
+controller.abort();
+await assert.rejects(attempt, { name: 'AbortError' });
+assert.equal(cancelled, true);
+assert.equal(progressListener, undefined, 'cancelled native request releases progress listener');

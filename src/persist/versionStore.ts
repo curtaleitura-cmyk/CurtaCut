@@ -1,3 +1,4 @@
+import { t } from '../i18n/locale';
 // Version history (/api/versions): List of named snapshots saved by project, reused during recovery
 // migrateProjectDoc verification. Share native server KV with projectStore.
 import { migrateProjectDoc } from './projectStore';
@@ -90,7 +91,7 @@ async function persistVersion(
 ): Promise<ProjectVersion> {
   const version: ProjectVersion = {
     id: newId(),
-    name: name.trim() || (automatic ? '自动保存' : '未命名版本'),
+    name: name.trim() || (automatic ? t('自动保存') : t('未命名版本')),
     createdAt: Date.now(),
     automatic,
     doc,

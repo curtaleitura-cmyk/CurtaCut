@@ -1,4 +1,5 @@
 import type {} from '../desktop-api';
+import { abortable } from './transcriptionActivity';
 import { ASR_INFERENCE_CONTRACT } from '../../shared/asr-inference-contract';
 import type { DesktopAsrBackend } from '../../shared/desktop-inference';
 import type { AsrConfig, AsrResult } from './local-asr-types';
@@ -11,6 +12,7 @@ export interface DesktopNativeAsrAttempt {
 
 export interface DesktopNativeAsrOptions {
   readonly sourcePath: string;
+  readonly signal?: AbortSignal;
   readonly config: AsrConfig;
   readonly language: string;
   readonly onProgress?: (progress?: number, file?: string) => void;
@@ -34,14 +36,17 @@ export async function tryDesktopNativeAsr(
     const capabilities = await api.getCapabilities();
     if (!capabilities.asr.available
       || capabilities.asr.contractId !== ASR_INFERENCE_CONTRACT.id) return null;
+    options.signal?.throwIfAborted();
     const requestId = nextRequestId();
     const unsubscribe = api.subscribeProgress((progress) => {
       if (progress.requestId === requestId) {
         options.onProgress?.(progress.progress, progress.file);
       }
     });
+    const cancel = () => { void api.cancel(requestId).catch(() => {}); };
+    options.signal?.addEventListener('abort', cancel, { once: true });
     try {
-      const response = await api.transcribe({
+      const pending = api.transcribe({
         requestId,
         contractId: ASR_INFERENCE_CONTRACT.id,
         sourcePath: options.sourcePath,
@@ -49,14 +54,17 @@ export async function tryDesktopNativeAsr(
         revision: options.config.revision,
         language: options.language,
       });
+      const response = options.signal ? await abortable(pending, options.signal) : await pending;
       return {
         backend: response.backend,
         result: { text: response.text, chunks: [...response.chunks] },
       };
     } finally {
+      options.signal?.removeEventListener('abort', cancel);
       unsubscribe();
     }
   } catch (reason) {
+    options.signal?.throwIfAborted();
     options.onFallback?.(reason instanceof Error ? reason : new Error(String(reason)));
     return null;
   }

@@ -24,8 +24,8 @@ const { autoTranscribeIngestSetting, shouldAutoTranscribeIngest, setAutoTranscri
 
 // Default: local engine auto-transcribes, cloud does not.
 storage.removeItem(AUTO_TRANSCRIBE_INGEST_KEY);
-assert.equal(autoTranscribeIngestSetting(), 'local', 'default is local');
-assert.equal(shouldAutoTranscribeIngest('local'), true, 'local engine auto by default');
+assert.equal(autoTranscribeIngestSetting(), 'off', 'default is manual');
+assert.equal(shouldAutoTranscribeIngest('local'), false, 'importing does not start local inference');
 assert.equal(shouldAutoTranscribeIngest('assemblyai'), false, 'cloud never auto by default');
 
 // off: nothing auto-transcribes.
@@ -46,8 +46,8 @@ assert.equal(shouldAutoTranscribeIngest('assemblyai'), false);
 
 // Garbage values degrade to the default instead of crashing.
 storage.setItem(AUTO_TRANSCRIBE_INGEST_KEY, 'garbage');
-assert.equal(autoTranscribeIngestSetting(), 'local', 'garbage falls back to local');
+assert.equal(autoTranscribeIngestSetting(), 'off', 'garbage falls back to manual');
 storage.setItem(AUTO_TRANSCRIBE_INGEST_KEY, 'OFF');
-assert.equal(autoTranscribeIngestSetting(), 'local', 'case-sensitive, falls back to local');
+assert.equal(autoTranscribeIngestSetting(), 'off', 'case-sensitive, falls back to manual');
 
 console.log('auto-transcribe-ingest.verify: policy decisions passed');
