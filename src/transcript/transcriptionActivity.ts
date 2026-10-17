@@ -60,8 +60,9 @@ export async function runTranscriptionActivity<T>(
     // A shared browser worker handles one local attempt at a time. Cancelling a
     // queued import must never terminate another video's active inference.
     const pending = info.provider === 'local' ? localQueue.then(execute) : execute();
-    if (info.provider === 'local') localQueue = pending.catch(() => {});
-    const result = await abortable(pending, controller.signal);
+    const cancellable = abortable(pending, controller.signal);
+    if (info.provider === 'local') localQueue = cancellable.catch(() => {});
+    const result = await cancellable;
     activity = { ...activity, status: 'done', stage: 'finalizing', percent: 100, finishedAt: Date.now() };
     return result;
   } catch (error) {

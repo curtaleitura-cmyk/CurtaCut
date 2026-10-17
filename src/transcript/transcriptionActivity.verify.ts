@@ -36,6 +36,16 @@ const id = getTranscriptionActivities().find(x => x.status === 'running')!.id;
 cancelTranscriptionActivity(id);
 await assert.rejects(running, { name: 'AbortError' });
 assert.equal(getTranscriptionActivities().find(x => x.id === id)!.status, 'cancelled');
+// A decoder/IPC operation that ignores cancellation cannot block later jobs.
+const stuck = deferred<void>();
+const entered = deferred<void>();
+const hanging = runTranscriptionActivity(info, async () => { entered.resolve(); return stuck.promise; });
+await entered.promise;
+const hangingId = getTranscriptionActivities().find(x => x.status === 'running')!.id;
+cancelTranscriptionActivity(hangingId);
+await assert.rejects(hanging, { name: 'AbortError' });
+assert.equal(await runTranscriptionActivity(info, async () => 'retry'), 'retry', 'cancel releases the queue before old preparation responds');
+stuck.resolve();
 const aborted = new AbortController(); aborted.abort();
 await assert.rejects(runTranscriptionActivity(info, async () => assert.fail('pre-cancelled request ran'), aborted.signal), { name: 'AbortError' });
 await assert.rejects(runTranscriptionActivity({ ...info, provider: 'cloud' }, async () => { throw new Error('service unavailable'); }), /service unavailable/);
