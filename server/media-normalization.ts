@@ -1,3 +1,4 @@
+import { selectVideoAudio } from './media-audio-selection.ts';
 import { randomUUID } from 'node:crypto';
 import { realpath, stat, unlink } from 'node:fs/promises';
 import { basename, dirname, extname, join } from 'node:path';
@@ -133,6 +134,8 @@ export interface ProbeMeta {
   videoCodec: string;
   audioCodec: string;
   hasAudio: boolean;
+  audioStreamIndex?: number;
+  hasSpatialAudio?: boolean;
   sourceBitrate: number;
   size: number;
   avgFrameRate?: number;
@@ -226,7 +229,7 @@ export async function probeVideo(path: string, signal?: AbortSignal): Promise<Pr
   };
   const streams = Array.isArray(data.streams) ? data.streams : [];
   const video = streams.find((s) => s.codec_type === 'video');
-  const audio = streams.find((s) => s.codec_type === 'audio');
+  const { audio, hasSpatialAudio } = selectVideoAudio(streams);
   if (!video) throw new Error('no video stream');
   const codedWidth = Number(video.width) || 0;
   const codedHeight = Number(video.height) || 0;
@@ -250,8 +253,10 @@ export async function probeVideo(path: string, signal?: AbortSignal): Promise<Pr
     height,
     duration,
     videoCodec: String(video.codec_name || ''),
-    audioCodec: String(audio?.codec_name || ''),
-    hasAudio: Boolean(audio?.codec_name),
+    audioCodec: audio ? String(audio.codec_name || audio.codec_tag_string || 'unknown') : '',
+    hasAudio: audio !== undefined,
+    audioStreamIndex: Number.isInteger(audio?.index) && Number(audio?.index) >= 0 ? Number(audio?.index) : undefined,
+    hasSpatialAudio,
     sourceBitrate,
     size,
     avgFrameRate,
@@ -323,6 +328,7 @@ export function normalizeReason(
   if (meta.hasAudio && !compatibleAudioCodec(meta.audioCodec)) {
     return `audio codec ${meta.audioCodec || 'unknown'} is not browser-aligned`;
   }
+  if (meta.hasSpatialAudio) return 'select stereo compatibility track from spatial audio';
   if (!optimize) return null;
   if (meta.width > MAX_DIMENSION || meta.height > MAX_DIMENSION) {
     return `dimensions ${meta.width}x${meta.height} exceed ${MAX_DIMENSION}px`;
@@ -414,7 +420,7 @@ export async function encodeNormalized(
     '-nostdin', '-hide_banner', '-loglevel', 'error', '-y',
     ...(await resolveHwDecodeArgs(ffmpeg, preferred)),
     '-i', inputPath, '-map', '0:v:0',
-    ...(meta.hasAudio ? ['-map', '0:a:0?'] : ['-an']),
+    ...(meta.hasAudio ? ['-map', meta.audioStreamIndex === undefined ? '0:a:0?' : `0:${meta.audioStreamIndex}`] : ['-an']),
   ];
   throwIfNormalizationAborted(signal);
   const audioArgs = !meta.hasAudio ? [] : streamPlan.transcodeAudio

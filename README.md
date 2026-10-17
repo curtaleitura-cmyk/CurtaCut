@@ -18,6 +18,12 @@ O CurtaCut é uma versão independente mantida por `curtaleitura-cmyk`. Reutiliz
 A instalação pelo `.exe` dispensa Git, Node.js e os comandos abaixo. O pacote inclui `SHA256SUMS.txt`. É um instalador experimental; ainda não há release estável assinada. Esse download do GitHub Actions expira em **15/11/2026**. [Ver execução e testes](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38982272031).
 
 
+## Correções de compatibilidade (0.2.19)
+
+- Novos projetos adotam as dimensões do primeiro vídeo, incluindo stories/shorts em retrato. Tamanhos manuais e sequências com conteúdo existente são preservados.
+- Vídeos com Áudio Espacial APAC e faixa estéreo AAC passam a usar explicitamente a faixa compatível. Uma faixa de áudio com codec desconhecido deixa de ser confundida com ausência de som.
+- A validação inclui exportação vertical com áudio, cortes e faixa silenciada no Windows, além de seleção de faixas com FFmpeg. A confirmação com o vídeo original do iPhone da usuária permanece pendente.
+
 ## O que já mudou nesta versão
 
 - **Interface em Português (Brasil)**, com inglês para os textos ainda sem tradução. Se uma preferência anterior mantiver inglês ou chinês, use o seletor de idioma na barra superior.
