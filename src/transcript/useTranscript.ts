@@ -53,13 +53,14 @@ export function useTranscript() {
           setStatus('processing');
           setProgressNote(note || (opts?.label ? t('转写 {label}…', { label: opts.label }) : t('转写中…')));
         },
-        { languageCode: opts?.languageCode },
+        opts,
       );
       setResult(r);
       setStatus('done');
       setProgressNote(null);
       return r;
     } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') { setStatus('idle'); setProgressNote(null); throw e; }
       setError(transcriptErrorMessage(e));
       setStatus('error');
       setProgressNote(null);
@@ -93,13 +94,14 @@ export function useTranscript() {
             setStatus('processing');
             setProgressNote(t('({i}/{total}) 转写 {label}…', { i: i + 1, total: jobs.length, label: job.label }));
           },
-          opts,
+          { ...opts, label: job.label },
         );
         last = r;
         setResult(r);
         onEach(job.itemId, r);
         ok += 1;
       } catch (e) {
+        if (e instanceof DOMException && e.name === 'AbortError') { setStatus('idle'); setProgressNote(null); setActiveItemId(null); return last; }
         const msg = transcriptErrorMessage(e);
         failures.push(`${job.label}: ${msg}`);
         // keep going — partial track is better than abort

@@ -1,3 +1,4 @@
+import { runTranscriptionActivity } from './transcriptionActivity';
 import { DEFAULT_TRANSCRIPTION_LANGUAGE } from '../../shared/transcription-language';
 // Transcription provider routing. Credentials remain server-side; local and
 // AssemblyAI keep their specialized execution paths.
@@ -23,18 +24,18 @@ export const TRANSCRIPTION_PROVIDER_CHANGE_EVENT = 'openchatcut:transcription-pr
 
 /** Ingestion auto-transcribe policy. `local` transcribes only on the free
  *  on-device engine; `all` also fires on paid cloud providers; `off` never.
- *  Default `local` protects cloud budgets while keeping the free engine automatic. */
+ *  Default `off` keeps importing separate from transcription. */
 export const AUTO_TRANSCRIBE_INGEST_KEY = 'cc.autoTranscribeIngest';
 export type AutoTranscribeIngestSetting = 'off' | 'local' | 'all';
 
 export function autoTranscribeIngestSetting(): AutoTranscribeIngestSetting {
   try {
     const value = localStorage.getItem(AUTO_TRANSCRIBE_INGEST_KEY);
-    if (value === 'off' || value === 'all') return value;
+    if (value === 'off' || value === 'local' || value === 'all') return value;
   } catch {
     // SSR / private browsing: fall through to the default.
   }
-  return 'local';
+  return 'off';
 }
 
 export function shouldAutoTranscribeIngest(
@@ -115,13 +116,22 @@ export async function transcribePathResumable(
     languageCode: opts.languageCode ?? preferredTranscriptionLanguage(),
     diarize: opts.diarize ?? preferredTranscriptionDiarization(),
   };
-  if (provider === 'local') {
-    return localTranscribePathResumable(path, resume, onCheckpoint, onWait, capturedOptions);
-  }
-  if (provider === 'assemblyai') {
-    return assemblyaiTranscribePathResumable(path, resume, onCheckpoint, onWait, capturedOptions);
-  }
-  return genericCloudTranscribePath(provider, path, onCheckpoint, onWait, capturedOptions);
+  return runTranscriptionActivity({ source: opts.label ?? path, provider, language: capturedOptions.languageCode! }, async (signal, progress, heartbeat) => {
+    const options = { ...capturedOptions, signal, onProgress: progress };
+    const checkpoint: AssemblyAiCheckpointWriter = async value => {
+      signal.throwIfAborted();
+      if (value.providerStatus === 'completed') progress({ stage: 'finalizing' });
+      else if (value.providerStatus === 'queued') progress({ stage: 'queued' });
+      else if (value.providerStatus === 'submitted' || (provider !== 'local' && value.providerStatus === 'processing')) progress({ stage: 'transcribing' });
+      await onCheckpoint(value);
+      signal.throwIfAborted();
+    };
+    const waiting = (note?: string) => { heartbeat(); onWait?.(note); };
+    if (provider === 'local') return localTranscribePathResumable(path, resume, checkpoint, waiting, options);
+    if (provider === 'assemblyai') return assemblyaiTranscribePathResumable(path, resume, checkpoint, waiting, options);
+    progress({ stage: 'transcribing' });
+    return genericCloudTranscribePath(provider, path, checkpoint, waiting, options);
+  }, opts.signal);
 }
 
 export async function transcribePath(

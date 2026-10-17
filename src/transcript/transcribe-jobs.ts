@@ -1,3 +1,4 @@
+import { t } from '../i18n/locale';
 // Client-side ASR coordinator. Live status remains in memory for
 // track_progress; durable checkpoints retain provider identity and source
 // revision. AssemblyAI additionally resumes upload and provider job ids.
@@ -225,6 +226,7 @@ export function enqueueTranscription(
         undefined,
         {
           languageCode: checkpoint.languageCode,
+          label: asset.name,
           diarize: checkpoint.diarize ?? diarize,
           asrPath: asrPath || undefined,
         },
@@ -276,7 +278,7 @@ export function enqueueTranscription(
       };
     } catch (error) {
       if (!isCurrentGeneration(projectId, asset.id, sourceRevision, generation) || !sourceIsCurrent()) return null;
-      const message = error instanceof Error ? error.message : String(error);
+      const message = error instanceof DOMException && error.name === 'AbortError' ? t('Transcription cancelled') : error instanceof Error ? error.message : String(error);
       if (!checkpoint) {
         return {
           projectId,

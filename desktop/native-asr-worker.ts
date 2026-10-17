@@ -94,9 +94,10 @@ function runWhisperCli(
   language: string,
   useGpu: boolean,
   signal?: AbortSignal,
+  onProgress?: (percent: number) => void,
 ): Promise<{ jsonPath: string; stderr: string }> {
   return new Promise((resolve, reject) => {
-    const args = whisperCliArgs(ggmlPath, wavPath, language, useGpu);
+    const args = [...whisperCliArgs(ggmlPath, wavPath, language, useGpu), '-pp'];
     const child: ChildProcess = spawn(requireRuntime().whisperCliPath, args, {
       stdio: ['ignore', 'ignore', 'pipe'],
       windowsHide: true,
@@ -118,6 +119,8 @@ function runWhisperCli(
     signal?.addEventListener('abort', onAbort, { once: true });
     child.stderr?.on('data', (chunk: Buffer) => {
       stderr = (stderr + chunk.toString('utf8')).slice(-STDERR_LIMIT);
+      const match = [...stderr.matchAll(/progress\s*=\s*(\d+)%/g)].pop();
+      if (match) onProgress?.(Math.min(100, Number(match[1])));
     });
     child.once('error', (error) => {
       if (settled) return;
@@ -232,11 +235,14 @@ async function transcribeWithEngine(
   engine: LoadedEngine,
   signal?: AbortSignal,
 ): Promise<DesktopAsrResponse> {
+  port!.postMessage({ type: 'progress', progress: { requestId: request.requestId, file: '@preparing' } });
+  const progress = (percent: number) => port!.postMessage({ type: 'progress', progress: { requestId: request.requestId, file: '@transcribing', progress: percent } });
   const samples = await extractPcm(requireRuntime().ffmpegPath, request.sourcePath, SAMPLE_RATE);
   const dir = await mkdtemp(join(tmpdir(), 'occ-asr-'));
   const wavPath = join(dir, 'input.wav');
   try {
     await writeWav(samples, wavPath);
+    port!.postMessage({ type: 'progress', progress: { requestId: request.requestId, file: '@transcribing' } });
     // 1. Persistent whisper-server: model loaded once, Metal by default.
     try {
       const { text, chunks } = await transcribeViaServer(
@@ -254,13 +260,13 @@ async function transcribeWithEngine(
       let backend: DesktopAsrBackend = engine.backend;
       try {
         const { jsonPath } = await runWhisperCli(
-          engine.ggmlPath, wavPath, whisperLanguage(request.language), true, signal,
+          engine.ggmlPath, wavPath, whisperLanguage(request.language), true, signal, progress,
         );
         json = JSON.parse(await readFile(jsonPath, 'utf8')) as WhisperJson;
       } catch (gpuError) {
         if (engine.backend === 'native-cpu') throw gpuError;
         const { jsonPath } = await runWhisperCli(
-          engine.ggmlPath, wavPath, whisperLanguage(request.language), false, signal,
+          engine.ggmlPath, wavPath, whisperLanguage(request.language), false, signal, progress,
         );
         json = JSON.parse(await readFile(jsonPath, 'utf8')) as WhisperJson;
         backend = 'native-cpu';

@@ -8,15 +8,30 @@ O CurtaCut é uma versão independente mantida por `curtaleitura-cmyk`. Reutiliz
 
 ## Baixar e instalar no Windows
 
-**[Baixar CurtaCut para Windows x64 — ZIP com instalador, cerca de 740 MB](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38982272031/artifacts/12081832427)**
+**[Baixar CurtaCut para Windows x64 — ZIP com instalador, cerca de 740 MB](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38999000980/artifacts/12088721516)**
 
 1. Entre na sua conta do GitHub para baixar o artefato.
-2. Extraia o ZIP e abra **`CurtaCut-0.2.18-x64.exe`**.
+2. Extraia o ZIP e abra **`CurtaCut-0.2.20-x64.exe`**.
 3. Siga o assistente de instalação e abra o CurtaCut.
 4. Nas configurações de modelos locais, baixe um modelo Whisper antes da primeira transcrição. No seletor da barra superior, escolha **Português (Brasil)** para a interface. Confira **Local** e **Português (Brasil) — pt**; preferências anteriores, se existirem, continuam sendo respeitadas.
 
-A instalação pelo `.exe` dispensa Git, Node.js e os comandos abaixo. O pacote inclui `SHA256SUMS.txt`. É um instalador experimental; ainda não há release estável assinada. Esse download do GitHub Actions expira em **15/11/2026**. [Ver execução e testes](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38982272031).
+A instalação pelo `.exe` dispensa Git, Node.js e os comandos abaixo. O pacote inclui `SHA256SUMS.txt`. É um instalador experimental; ainda não há release estável assinada. Esse download do GitHub Actions expira em **16/11/2026**. [Ver execução e testes](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38999000980).
 
+
+## Melhorias de uso (0.2.21)
+
+- Importar em **Minhas mídias** ou arrastar para a timeline deixa de iniciar transcrição por padrão. Use **Transcrever** no cartão da mídia ou na aba de transcrição. A opção automática continua disponível em Configurações; escolhas anteriores explícitas são respeitadas.
+- Um painel permanece visível durante transcrições manuais, automáticas e solicitadas pelo assistente, com arquivo, motor, idioma, modelo local, etapa, tempo decorrido e cancelamento. Percentuais aparecem quando fornecidos pelo motor, separados por etapa. Após 90 segundos sem atualização, o painel avisa sem afirmar que houve travamento.
+- Cancelar interrompe a inferência local e descarta resultados posteriores. Em serviços na nuvem, interrompe a espera local; o provedor pode continuar processando. Use **Transcrever novamente** no cartão da mídia em caso de falha.
+- Novos projetos e sequências usam nomes no idioma da interface. Os nomes e resumos das 11 skills de criação têm tradução para português e alternativa em inglês. Nomes personalizados e projetos existentes são preservados.
+
+## Compatibilidade de vídeo e áudio (0.2.20)
+
+- Novos projetos seguem o enquadramento do primeiro vídeo, inclusive quando uma música foi adicionada antes. Tamanhos manuais e projetos existentes são preservados.
+- O FFmpeg incluído prepara uma cópia de áudio compatível quando necessário, mantendo o original intacto. Testes cobrem WAV, FLAC, MP3, AAC, ALAC, AC3, E-AC3, WMA, AIFF, CAF, Opus e Vorbis, além de AAC multicanal dentro de vídeo vertical.
+- Vídeos com APAC e faixa estéreo compatível passam a usar explicitamente essa faixa. Arquivos protegidos ou codecs proprietários não têm suporte garantido.
+
+Para testar o enquadramento automático, crie um projeto novo e importe o vídeo original.
 
 ## O que já mudou nesta versão
 

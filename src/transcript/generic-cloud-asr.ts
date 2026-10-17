@@ -100,6 +100,7 @@ async function postTranscription(
   blob: Blob,
   languageCode: string,
   diarize: boolean,
+  signal?: AbortSignal,
 ): Promise<TranscriptResult> {
   const query = new URLSearchParams({
     provider,
@@ -112,6 +113,7 @@ async function postTranscription(
       method: 'POST',
       headers: { 'Content-Type': 'application/octet-stream' },
       body: blob,
+      signal,
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
@@ -139,11 +141,13 @@ export async function genericCloudTranscribePath(
   await onCheckpoint({ providerStatus: 'processing' });
   onWait?.();
   const blob = await loadGenericCloudSource(path, opts);
+  opts.signal?.throwIfAborted();
   const result = await postTranscription(
     provider,
     blob,
     opts.languageCode ?? DEFAULT_TRANSCRIPTION_LANGUAGE,
     opts.diarize ?? true,
+    opts.signal,
   );
   await onCheckpoint({ providerStatus: 'completed' });
   return result;

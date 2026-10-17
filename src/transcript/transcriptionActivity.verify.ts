@@ -1,0 +1,47 @@
+import assert from 'node:assert/strict';
+import { abortable, cancelTranscriptionActivity, dismissTranscriptionActivity, getTranscriptionActivities,
+  runTranscriptionActivity, subscribeTranscriptionActivities } from './transcriptionActivity';
+const info = { source: '/media/uploads/story.mov', provider: 'local', language: 'pt' };
+let notifications = 0;
+const unsubscribe = subscribeTranscriptionActivities(() => notifications++);
+const deferred = <T>() => Promise.withResolvers<T>();
+const active = deferred<string>();
+let started = false;
+const first = runTranscriptionActivity(info, async (signal, progress) => {
+  started = true; progress({ stage: 'loading', percent: 70, model: 'whisper' });
+  progress({ stage: 'transcribing' });
+  return abortable(active.promise, signal);
+});
+await new Promise(resolve => setTimeout(resolve, 0));
+assert.equal(started, true);
+assert.equal(getTranscriptionActivities()[0]?.percent, undefined, 'loading percentage is not passed off as speech progress');
+let secondStarted = false;
+const second = runTranscriptionActivity(info, async () => { secondStarted = true; return 'wrong'; });
+const secondId = getTranscriptionActivities().at(-1)!.id;
+assert.equal(getTranscriptionActivities().at(-1)!.stage, 'queued');
+cancelTranscriptionActivity(secondId);
+await assert.rejects(second, { name: 'AbortError' });
+assert.equal(secondStarted, false, 'cancelled queue entry never runs');
+active.resolve('transcript');
+assert.equal(await first, 'transcript');
+assert.equal(getTranscriptionActivities().find(x => x.status === 'done')!.percent, 100);
+const gate = deferred<string>();
+const running = runTranscriptionActivity(info, async (signal, progress) => {
+  signal.addEventListener('abort', () => gate.reject(signal.reason), { once: true });
+  progress({ stage: 'transcribing', percent: 45 });
+  return gate.promise;
+});
+await new Promise(resolve => setTimeout(resolve, 0));
+const id = getTranscriptionActivities().find(x => x.status === 'running')!.id;
+cancelTranscriptionActivity(id);
+await assert.rejects(running, { name: 'AbortError' });
+assert.equal(getTranscriptionActivities().find(x => x.id === id)!.status, 'cancelled');
+const aborted = new AbortController(); aborted.abort();
+await assert.rejects(runTranscriptionActivity(info, async () => assert.fail('pre-cancelled request ran'), aborted.signal), { name: 'AbortError' });
+await assert.rejects(runTranscriptionActivity({ ...info, provider: 'cloud' }, async () => { throw new Error('service unavailable'); }), /service unavailable/);
+assert.equal(getTranscriptionActivities().at(-1)?.status, 'failed');
+for (const activity of getTranscriptionActivities()) dismissTranscriptionActivity(activity.id);
+assert.equal(getTranscriptionActivities().length, 0);
+assert.ok(notifications > 5);
+unsubscribe();
+console.log('transcriptionActivity.verify: progress stages, local queue, cancellation, errors and completion passed');

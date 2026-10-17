@@ -10,7 +10,7 @@ import type { CustomSkill } from '../persist/skillStore';
 import type { SkillDefinition } from '../agent/skills/skill-types';
 import { theme } from '../theme';
 
-const BUILTIN_IDS = new Set(['long-video-to-shorts', 'multi-clips-to-reels', 'ai-cinematic-short-film', 'product-ad-video-script', 'explainer-video', 'motion-graphic-placement', 'storyboard-shot-breakdown', 'video-thumbnail-generator', 'skill-creator']);
+
 
 export function SkillsTabPanel({
   creativeMode,
@@ -34,9 +34,9 @@ export function SkillsTabPanel({
     const needle = query.trim().toLowerCase();
     if (!needle) return skills;
     return skills.filter((skill) =>
-      [skill.name, skill.nameZh, skill.summary, skill.description, skill.slug]
+      [skill.name, skill.nameZh, skill.summary, skill.description, skill.slug, t(skill.name), t(skill.summary)]
         .some((field) => field.toLowerCase().includes(needle)));
-  }, [skills, query]);
+  }, [skills, query, t]);
 
   const reload = () => {
     loadCustomSkills().then((list) => { setCustomSkills(list); bumpCustom((n) => n + 1); });
@@ -90,13 +90,13 @@ export function SkillsTabPanel({
               <span className="cc-creative-mode-copy">
                 <span className="cc-creative-mode-title">
                   <strong>{skillName(skill)}</strong>
-                  {!BUILTIN_IDS.has(skill.slug) && <em>{t('自定义')}</em>}
+                  {skill.source !== 'builtin' && <em>{t('自定义')}</em>}
                 </span>
                 <small>{t(skill.summary)}</small>
               </span>
               {creativeMode === skill.id && <span className="cc-creative-mode-check">✓</span>}
             </button>
-            {!BUILTIN_IDS.has(skill.slug) && (
+            {skill.source !== 'builtin' && (
               <span className="cc-skill-actions">
                 <button
                   type="button"

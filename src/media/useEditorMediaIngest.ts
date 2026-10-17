@@ -170,7 +170,7 @@ function timelineImportHooks(batch: DropBatch, context: DropContext, placeholder
     },
     onUploaded: (info) => {
       context.commands.relinkMediaAsset(info.id, uploadedMediaRelinkPatch(info));
-      context.startAssetTranscription(info, info.asrPath);
+      if (shouldAutoTranscribeIngest()) context.startAssetTranscription(info, info.asrPath);
     },
     onReady: (asset, durationFps) => {
       context.commands.relinkMediaAsset(asset.id, mediaAssetRelinkPatch(asset, durationFps));
