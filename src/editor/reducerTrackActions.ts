@@ -98,7 +98,7 @@ export function applyTrackAction(
       const height = Math.round(a.height);
       // Zero/negative canvas would divide-by-zero nested sequence layout.
       if (width < 1 || height < 1) return s;
-      return { ...s, width, height, autoSizeFromFirstVideo: false, fit: a.fit ?? s.fit ?? 'contain' };
+      return { ...s, width, height, ...(s.autoSizeFromFirstVideo === true ? { autoSizeFromFirstVideo: false } : {}), fit: a.fit ?? s.fit ?? 'contain' };
     }
     case 'toggleTrack': {
       const trackCaptions = captionsOnTrack(s, a.track);

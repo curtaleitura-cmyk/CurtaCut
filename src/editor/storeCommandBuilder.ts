@@ -110,7 +110,7 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
           width: opts?.width ?? base.width,
           height: opts?.height ?? base.height,
           fit: opts?.fit ?? base.fit,
-          autoSizeFromFirstVideo: opts?.width === undefined && opts?.height === undefined,
+          ...(opts?.width === undefined && opts?.height === undefined ? { autoSizeFromFirstVideo: true } : {}),
           items: [], selectedId: null, trackOrder,
           tracks: { [trackOrder[0]]: { kind: 'video' } },
           id: uid('tl'), name: opts?.name ?? `序列 ${d.timelines.length + 1}`, order: maxOrder(d) + 1,

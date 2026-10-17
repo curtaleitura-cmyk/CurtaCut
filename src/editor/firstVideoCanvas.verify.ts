@@ -53,4 +53,17 @@ for (const method of ['retarget', 'toolbar']) {
   test.commands.addMediaItem(video(1080, 1920));
   assert.equal(test.state().width, 1920, 'existing caption layout is preserved');
 }
+{
+  const test = setup(true);
+  test.commands.duplicateTimeline('timeline', { retarget: { width: 1080, height: 1920 }, activate: true });
+  test.commands.addMediaItem(video(1920, 1080));
+  const active = test.history().present.timelines.find(timeline => timeline.id === test.history().present.activeTimelineId)!;
+  assert.deepEqual([active.width, active.height], [1080, 1920], 'explicit duplicate sizing wins');
+}
+{
+  const test = setup();
+  delete test.state().autoSizeFromFirstVideo;
+  test.commands.setAspect(1080, 1920);
+  assert.equal('autoSizeFromFirstVideo' in test.state(), false, 'legacy JSON is preserved');
+}
 console.log('firstVideoCanvas.verify: portrait, square, manual sizing, legacy projects, undo and audio volume passed');
