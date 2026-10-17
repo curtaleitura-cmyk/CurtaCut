@@ -8,14 +8,14 @@ O CurtaCut é uma versão independente mantida por `curtaleitura-cmyk`. Reutiliz
 
 ## Baixar e instalar no Windows
 
-**[Baixar CurtaCut para Windows x64 — ZIP com instalador, cerca de 740 MB](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38982272031/artifacts/12081832427)**
+**[Baixar CurtaCut para Windows x64 — ZIP com instalador, cerca de 740 MB](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38996833616/artifacts/12087940901)**
 
 1. Entre na sua conta do GitHub para baixar o artefato.
-2. Extraia o ZIP e abra **`CurtaCut-0.2.18-x64.exe`**.
+2. Extraia o ZIP e abra **`CurtaCut-0.2.19-x64.exe`**.
 3. Siga o assistente de instalação e abra o CurtaCut.
 4. Nas configurações de modelos locais, baixe um modelo Whisper antes da primeira transcrição. No seletor da barra superior, escolha **Português (Brasil)** para a interface. Confira **Local** e **Português (Brasil) — pt**; preferências anteriores, se existirem, continuam sendo respeitadas.
 
-A instalação pelo `.exe` dispensa Git, Node.js e os comandos abaixo. O pacote inclui `SHA256SUMS.txt`. É um instalador experimental; ainda não há release estável assinada. Esse download do GitHub Actions expira em **15/11/2026**. [Ver execução e testes](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38982272031).
+A instalação pelo `.exe` dispensa Git, Node.js e os comandos abaixo. O pacote inclui `SHA256SUMS.txt`. É um instalador experimental; ainda não há release estável assinada. Esse download do GitHub Actions expira em **16/11/2026**. [Ver execução e testes](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38996833616).
 
 
 ## Correções de compatibilidade (0.2.19)
@@ -23,6 +23,8 @@ A instalação pelo `.exe` dispensa Git, Node.js e os comandos abaixo. O pacote 
 - Novos projetos adotam as dimensões do primeiro vídeo, incluindo stories/shorts em retrato. Tamanhos manuais e sequências com conteúdo existente são preservados.
 - Vídeos com Áudio Espacial APAC e faixa estéreo AAC passam a usar explicitamente a faixa compatível. Uma faixa de áudio com codec desconhecido deixa de ser confundida com ausência de som.
 - A validação inclui exportação vertical com áudio, cortes e faixa silenciada no Windows, além de seleção de faixas com FFmpeg. A confirmação com o vídeo original do iPhone da usuária permanece pendente.
+
+Para testar estas correções, crie um projeto novo e importe novamente o vídeo original. Projetos anteriores mantêm suas proporções e edições.
 
 ## O que já mudou nesta versão
 
