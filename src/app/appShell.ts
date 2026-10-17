@@ -30,6 +30,7 @@ const emptyState = (): TimelineState => ({
   fps: 30,
   width: 1920,
   height: 1080,
+  autoSizeFromFirstVideo: true,
   items: [],
   selectedId: null,
   trackOrder: ['track_v1'],

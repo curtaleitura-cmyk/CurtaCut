@@ -79,7 +79,7 @@ export function projectReduce(p: ProjectDoc, a: AnyAction): ProjectDoc {
         const width = Math.round(a.width);
         const height = Math.round(a.height);
         if (width < 1 || height < 1) return p;
-        return { ...p, timelines: p.timelines.map((t) => (t.id === a.id ? { ...t, width, height, fit: a.fit ?? t.fit ?? 'contain' } : t)) };
+        return { ...p, timelines: p.timelines.map((t) => (t.id === a.id ? { ...t, width, height, autoSizeFromFirstVideo: false, fit: a.fit ?? t.fit ?? 'contain' } : t)) };
       }
       case 'tl.setFps':
         return withProjectFrameRate(p, a.fps);
