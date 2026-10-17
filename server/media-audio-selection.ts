@@ -7,6 +7,7 @@ export interface ProbedAudioStream {
   codec_name?: unknown;
   codec_tag_string?: unknown;
   channels?: unknown;
+  profile?: unknown;
   index?: unknown;
 }
 export function selectVideoAudio(streams: ProbedAudioStream[]): {

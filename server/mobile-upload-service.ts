@@ -1,3 +1,4 @@
+import { AUDIO_EXTENSION_MIME } from '../shared/media-formats.ts';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { createWriteStream } from 'node:fs';
 import { mkdir, open, rename, unlink } from 'node:fs/promises';
@@ -12,6 +13,7 @@ const DEFAULT_SESSION_TTL_MS = 10 * 60_000;
 const DEFAULT_MAX_BYTES = 10 * 1024 * 1024 * 1024;
 
 const EXTENSION_MIME: Record<string, string> = {
+  ...AUDIO_EXTENSION_MIME,
   '.mp4': 'video/mp4', '.m4v': 'video/mp4', '.mov': 'video/quicktime', '.webm': 'video/webm',
   '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.gif': 'image/gif',
   '.webp': 'image/webp', '.avif': 'image/avif', '.heic': 'image/heic', '.heif': 'image/heif',

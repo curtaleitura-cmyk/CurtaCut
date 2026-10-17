@@ -29,6 +29,13 @@ for (const [width, height] of [[1080, 1920], [720, 1280], [1080, 1080], [1920, 1
   test.commands.addMediaItem(video(1920, 1080));
   assert.deepEqual([test.state().width, test.state().height], [width, height], 'later videos do not resize an edited sequence');
 }
+{
+  const test = setup(true);
+  test.commands.addMediaItem({ id: 'music', name: 'music.mp3', kind: 'audio', src: '/media/uploads/music.mp3', durationInFrames: 90 });
+  test.commands.addMediaItem(video(1080, 1920));
+  assert.deepEqual([test.state().width, test.state().height], [1080, 1920], 'music before the first video does not choose its frame');
+  assert.equal(test.state().items.length, 2, 'the music is preserved');
+}
 for (const choice of [undefined, false]) {
   const test = setup(choice);
   test.commands.addMediaItem(video(1080, 1920));

@@ -42,10 +42,12 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --import tsx desktop/update-packaging.verify.ts
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Verify portrait canvas and audio selection
+      - name: Verify automatic frame and standard audio formats
         shell: pwsh
         run: |
           node --import tsx src/editor/firstVideoCanvas.verify.ts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --import tsx server/audio-normalization.verify.ts
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --import tsx server/media-audio-selection.verify.ts
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

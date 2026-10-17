@@ -1,3 +1,5 @@
+import { AUDIO_EXTENSIONS } from '../shared/media-formats.ts';
+import { normalizeAudioFile } from './audio-normalization.ts';
 import { mkdir, realpath, stat, unlink } from 'node:fs/promises';
 import { basename, extname, isAbsolute, join, relative, resolve } from 'node:path';
 import type { Stats } from 'node:fs';
@@ -19,8 +21,7 @@ const KIND_BY_EXTENSION: Record<string, DirectoryImportMediaKind> = {
   '.mp4': 'video', '.m4v': 'video', '.mov': 'video', '.webm': 'video',
   '.jpg': 'image', '.jpeg': 'image', '.png': 'image', '.webp': 'image',
   '.avif': 'image', '.heic': 'image', '.heif': 'image',
-  '.mp3': 'audio', '.wav': 'audio', '.m4a': 'audio', '.aac': 'audio',
-  '.ogg': 'audio', '.opus': 'audio', '.flac': 'audio',
+  ...Object.fromEntries(AUDIO_EXTENSIONS.map(extension => [extension, 'audio' as const])),
   '.gif': 'gif', '.svg': 'svg',
 };
 
@@ -329,9 +330,18 @@ async function resolveDirectoryPublication(
   dependencies: DirectoryImportDependencies,
   kind: DirectoryImportMediaKind,
   imported: LocalMediaImport,
+  createdPaths: string[],
 ): Promise<ResolvedDirectoryPublication> {
   const storedPath = dependencies.resolveUpload(imported.storedName);
   if (!storedPath) throw new Error('referenced directory media is offline');
+  if (kind === 'audio') {
+    const result = await checked(normalizeAudioFile({ inputPath: storedPath, publicSrc: imported.src,
+      outputDirectory: request.pinnedUploadDirectory, signal: request.signal,
+      onCreated: path => createdPaths.push(path) }), request.cancelled);
+    await assertPinnedDestination(request.pinnedUploadDirectory, dependencies, request.cancelled);
+    return { src: result.path, storedName: basename(result.path),
+      probe: { durationSeconds: result.durationSeconds }, compatibilityNormalized: true };
+  }
   if (kind !== 'video') {
     const probe = await checked(
       dependencies.probeMedia(storedPath, kind, request.signal), request.cancelled,
@@ -377,7 +387,7 @@ async function completeCopiedCandidate(
   stable: { path: string; fingerprint: DirectoryFileFingerprint },
   kind: DirectoryImportMediaKind,
   imported: LocalMediaImport,
-  createdPaths: readonly string[],
+  createdPaths: string[],
 ): Promise<DirectoryCandidateResult> {
   if (request.cancelled()) throw new DirectoryImportCancelledError();
   await assertPinnedDestination(request.pinnedUploadDirectory, dependencies, request.cancelled);
@@ -390,7 +400,7 @@ async function completeCopiedCandidate(
     await removeDirectoryImportFiles(createdPaths, dependencies);
     return { status: 'duplicate', fingerprint: stable.fingerprint };
   }
-  const publication = await resolveDirectoryPublication(request, dependencies, kind, imported);
+  const publication = await resolveDirectoryPublication(request, dependencies, kind, imported, createdPaths);
   const finalPath = await checked(dependencies.realpath(request.sourcePath), request.cancelled);
   const finalInfo = await checked(dependencies.stat(finalPath), request.cancelled);
   if (finalPath !== stable.path || !sameFingerprint(fingerprintOf(finalInfo), stable.fingerprint)) {

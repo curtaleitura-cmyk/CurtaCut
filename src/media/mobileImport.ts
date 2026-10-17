@@ -46,7 +46,7 @@ async function importServerMedia(record: MobileUploadRecord, fps: number): Promi
     width: metadata.width,
     height: metadata.height,
   });
-  if (kind !== 'video') {
+  if (kind !== 'video' && kind !== 'audio') {
     return {
       id: crypto.randomUUID(),
       name: record.name,
@@ -59,7 +59,7 @@ async function importServerMedia(record: MobileUploadRecord, fps: number): Promi
       ...metadata,
     };
   }
-  const normalized = await normalizeUploadedVideo(record.path);
+  const normalized = await normalizeUploadedVideo(record.path, kind);
   return {
     id: crypto.randomUUID(), name: record.name, sourceFilename: record.name,
     kind, src: normalized.src, sourceRevision, sourceSize, sourceModifiedAt,

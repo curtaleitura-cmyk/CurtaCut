@@ -18,7 +18,13 @@ O CurtaCut é uma versão independente mantida por `curtaleitura-cmyk`. Reutiliz
 A instalação pelo `.exe` dispensa Git, Node.js e os comandos abaixo. O pacote inclui `SHA256SUMS.txt`. É um instalador experimental; ainda não há release estável assinada. Esse download do GitHub Actions expira em **16/11/2026**. [Ver execução e testes](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/38996833616).
 
 
-## Correções de compatibilidade (0.2.19)
+## Compatibilidade de vídeo e áudio (0.2.20)
+
+- O primeiro vídeo define o enquadramento do projeto novo: em pé, deitado ou quadrado, inclusive quando uma música foi adicionada antes. Legendas e exportação usam esse frame; uma escolha manual de tamanho continua valendo.
+- A importação de áudio passa por verificação com o FFmpeg incluído. Formatos que precisam de adaptação recebem uma cópia AAC-LC estéreo para edição, mantendo o arquivo original intacto.
+- Testes reais cobrem WAV, FLAC, MP3, AAC, ALAC, AC3, E-AC3, WMA, AIFF, CAF, Opus e Vorbis, além de AAC multicanal dentro de vídeo vertical. O suporte depende dos decodificadores do FFmpeg; arquivos protegidos e codecs proprietários não têm compatibilidade garantida.
+
+### Correções anteriores (0.2.19)
 
 - Novos projetos adotam as dimensões do primeiro vídeo, incluindo stories/shorts em retrato. Tamanhos manuais e sequências com conteúdo existente são preservados.
 - Vídeos com Áudio Espacial APAC e faixa estéreo AAC passam a usar explicitamente a faixa compatível. Uma faixa de áudio com codec desconhecido deixa de ser confundida com ausência de som.
