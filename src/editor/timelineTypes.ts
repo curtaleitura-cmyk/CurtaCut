@@ -27,6 +27,8 @@ export interface TimelineState {
   height: number;
   /** how items fit when the canvas ratio differs from their design box */
   fit?: AspectFit;
+  /** New sequences may adopt the first video size; explicit sizing disables this. */
+  autoSizeFromFirstVideo?: boolean;
   items: TimelineItem[];
   /** visual top-to-bottom order of stable track ids */
   trackOrder?: TrackId[];

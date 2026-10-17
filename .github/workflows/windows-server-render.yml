@@ -53,3 +53,6 @@ jobs:
         run: node remotion/video-decoder.verify.mjs
       - name: Render H.264, VP9-alpha and ProRes sources server-side
         run: node remotion/video-decoder-render.verify.mjs
+
+      - name: Verify portrait video audio after adjacent cuts
+        run: node remotion/portrait-audio.verify.mjs

@@ -59,7 +59,7 @@ export function projectReduce(p: ProjectDoc, a: AnyAction): ProjectDoc {
         // so ids can't collide; retarget swaps the canvas for long→short).
         const copy: Timeline = {
           ...src, id: a.newId, name: a.name, order: maxOrder(p) + 1, selectedId: null, hidden: false,
-          ...(a.retarget ? { width: a.retarget.width, height: a.retarget.height, fit: a.retarget.fit ?? src.fit ?? 'contain' } : {}),
+          ...(a.retarget ? { width: a.retarget.width, height: a.retarget.height, ...(src.autoSizeFromFirstVideo === true ? { autoSizeFromFirstVideo: false } : {}), fit: a.retarget.fit ?? src.fit ?? 'contain' } : {}),
         };
         const next = { ...p, timelines: [...p.timelines, copy], activeTimelineId: a.activate === false ? p.activeTimelineId : copy.id };
         return sequenceGraphError(next) ? p : next;
@@ -79,7 +79,7 @@ export function projectReduce(p: ProjectDoc, a: AnyAction): ProjectDoc {
         const width = Math.round(a.width);
         const height = Math.round(a.height);
         if (width < 1 || height < 1) return p;
-        return { ...p, timelines: p.timelines.map((t) => (t.id === a.id ? { ...t, width, height, fit: a.fit ?? t.fit ?? 'contain' } : t)) };
+        return { ...p, timelines: p.timelines.map((t) => (t.id === a.id ? { ...t, width, height, ...(t.autoSizeFromFirstVideo === true ? { autoSizeFromFirstVideo: false } : {}), fit: a.fit ?? t.fit ?? 'contain' } : t)) };
       }
       case 'tl.setFps':
         return withProjectFrameRate(p, a.fps);

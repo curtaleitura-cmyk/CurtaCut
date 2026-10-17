@@ -13,6 +13,7 @@ import { sourceFramesToTimelineFrames } from './sourceLimit';
 import type { EditorCommands } from './storeCommands';
 import {
   activeEditorState,
+  captionTrackEntries,
   activeTimeline,
   defaultTrackId,
   resolveTrackId,
@@ -109,6 +110,7 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
           width: opts?.width ?? base.width,
           height: opts?.height ?? base.height,
           fit: opts?.fit ?? base.fit,
+          ...(opts?.width === undefined && opts?.height === undefined ? { autoSizeFromFirstVideo: true } : {}),
           items: [], selectedId: null, trackOrder,
           tracks: { [trackOrder[0]]: { kind: 'video' } },
           id: uid('tl'), name: opts?.name ?? `序列 ${d.timelines.length + 1}`, order: maxOrder(d) + 1,
@@ -303,7 +305,15 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
               // so per-clip word edits never mutate the asset master.
               ...copyTranscriptIdentity(asset),
             };
-        placeItem(item, at);
+        const state = activeTimeline(getDoc());
+        const autoSize = state.autoSizeFromFirstVideo === true && state.items.length === 0
+          && !state.captions && !captionTrackEntries(state).some(entry => entry.captions) && asset.kind === 'video'
+          && Number.isFinite(asset.width) && Number.isFinite(asset.height)
+          && asset.width! > 0 && asset.height! > 0;
+        const sizing: AtomicAction[] = autoSize
+          ? [{ type: 'tl.retarget', id: state.id, width: asset.width!, height: asset.height! }]
+          : [];
+        placeItem(item, at, sizing);
         return item.id;
       },
       addSequence: (timelineId, at) => {
