@@ -1,3 +1,4 @@
+import { ReviewTranscript } from "./ReviewTranscript";
 import { ReviewSummary } from "./ReviewSummary";
 import { reviewTime as clock } from "./reviewModel";
 import { PreviewPanel } from "../components/PreviewPanel";
@@ -8,17 +9,16 @@ import {
 } from "./useSimplifiedEditor";
 import "./simplified.css";
 export function SimplifiedEditor(props: SimplifiedEditorProps) {
+  const editor = useSimplifiedEditor(props);
   const {
     commands,
     preview,
-    library,
     topBar,
     state,
     assets,
     asset,
     model,
     selected,
-    active,
     tab,
     setTab,
     sourceMode,
@@ -41,20 +41,16 @@ export function SimplifiedEditor(props: SimplifiedEditorProps) {
     pauses,
     cutCount,
     finalText,
-    editingRow,
-    setEditingRow,
     select,
     sourceSeek,
     editedSeek,
     changeCut,
     hearJoin,
-    fixWord,
     importVideo,
     downloadSrt,
     setAssetId,
-    setSelectedId,
     onAdvanced,
-  } = useSimplifiedEditor(props);
+  } = editor;
   return (
     <main className="cc-simple" aria-label="Edição simplificada">
       <div className="cc-simple-heading">
@@ -204,131 +200,7 @@ export function SimplifiedEditor(props: SimplifiedEditorProps) {
             </button>
           </div>
           <div className="cc-simple-scroll" ref={body} role="tabpanel">
-            {!model ? (
-              <div className="cc-simple-empty">
-                <h2>Comece pelo seu vídeo</h2>
-                <p>Importe um vídeo para editar usando o texto da fala.</p>
-                <button onClick={() => importInput.current?.click()}>
-                  Importar vídeo
-                </button>
-              </div>
-            ) : tab === "suggestions" ? (
-              <div className="cc-simple-empty">
-                <h2>Revisão inteligente</h2>
-                <p>
-                  A análise por IA ainda não está conectada a este modo. Nenhuma
-                  sugestão fictícia será exibida.
-                </p>
-                <h3>Pausas entre falas</h3>
-                <p>
-                  Estes intervalos vêm dos timestamps da transcrição, não de uma
-                  análise de IA. Confira o áudio antes de decidir.
-                </p>
-                {pauses.length ? (
-                  pauses.map((pause, i) => (
-                    <button
-                      key={i}
-                      className="cc-simple-pause"
-                      onClick={() => sourceSeek(pause.start, true, pause.end)}
-                    >
-                      ▶ {clock(pause.start / fps)} – {clock(pause.end / fps)} ·
-                      pausa de {((pause.end - pause.start) / fps).toFixed(1)}s
-                    </button>
-                  ))
-                ) : (
-                  <p>
-                    Nenhuma pausa de pelo menos um segundo identificada na
-                    transcrição disponível.
-                  </p>
-                )}
-              </div>
-            ) : !model.rows.length ? (
-              <div className="cc-simple-empty">
-                <h2>Seu vídeo, palavra por palavra</h2>
-                <p>
-                  Transcreva o vídeo para navegar pelas falas e começar a
-                  editar.
-                </p>
-                <button
-                  disabled={model.asset.transcribeStatus === "running"}
-                  onClick={() => library.onTranscribeAsset(model.asset)}
-                >
-                  {model.asset.transcribeStatus === "running"
-                    ? "Transcrição em andamento…"
-                    : "Transcrever vídeo"}
-                </button>
-                {model.asset.transcribeError && (
-                  <p role="alert">{model.asset.transcribeError}</p>
-                )}
-              </div>
-            ) : (
-              model.rows.map((row) => (
-                <article
-                  key={row.id}
-                  data-row-id={row.id}
-                  className={`cc-simple-row ${row.keptFrames === 0 ? "is-cut" : ""} ${selected?.id === row.id ? "is-selected" : ""} ${active?.id === row.id ? "is-playing" : ""}`}
-                >
-                  <div className="cc-simple-row-meta">
-                    <button
-                      onClick={() => select(row, true)}
-                      aria-label={`Reproduzir trecho em ${clock(row.speechStart / 1000)}`}
-                    >
-                      ▶
-                    </button>
-                    <button onClick={() => select(row)}>
-                      {clock(row.speechStart / 1000)} –{" "}
-                      {clock(row.speechEnd / 1000)}
-                    </button>
-                    <span>
-                      {row.keptFrames === 0
-                        ? "Removido"
-                        : row.keptFrames < row.end - row.start
-                          ? "Parcialmente cortado"
-                          : "Mantido"}
-                    </span>
-                  </div>
-                  <button
-                    className="cc-simple-row-text"
-                    onClick={() => select(row)}
-                  >
-                    {row.text}
-                  </button>
-                  <div className="cc-simple-row-actions">
-                    <button
-                      disabled={!!model.blocker}
-                      onClick={() => {
-                        setSelectedId(row.id);
-                        changeCut(row.keptFrames === 0, row);
-                      }}
-                    >
-                      {row.keptFrames === 0 ? "Restaurar" : "Marcar corte"}
-                    </button>
-                    <details
-                      onToggle={(event) => {
-                        if (event.currentTarget.open) setEditingRow(row.id);
-                      }}
-                    >
-                      <summary>Corrigir palavras</summary>
-                      <div className="cc-simple-word-edit">
-                        {editingRow === row.id &&
-                          row.wordIndices.map((i) => (
-                            <input
-                              key={`${i}:${model.words[i]!.text}`}
-                              aria-label={`Corrigir palavra ${i + 1}`}
-                              defaultValue={model.words[i]!.text}
-                              onBlur={(event) => fixWord(i, event.target.value)}
-                              onKeyDown={(event) => {
-                                if (event.key === "Enter")
-                                  event.currentTarget.blur();
-                              }}
-                            />
-                          ))}
-                      </div>
-                    </details>
-                  </div>
-                </article>
-              ))
-            )}
+            <ReviewTranscript editor={editor} />
           </div>
           <div className="cc-simple-tools">
             <button

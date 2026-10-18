@@ -1,3 +1,4 @@
+import { transcriptReviewHints } from "./reviewHints";
 import assert from "node:assert/strict";
 import { historyReduce } from "../editor/reduce";
 import { buildCommands } from "../editor/storeCommandBuilder";
@@ -161,4 +162,34 @@ assert.equal(
   planReviewCut(sourceOnly, sourceOnly.rows[1]!, id)[0]?.type,
   "pool.setTranscription",
   "track-only transcripts are preserved on the master before removal",
+);
+
+// Suggestion labels come from the real text, never a canned result or a cut action.
+const hintRows = [
+  { id: "normal", text: "Esse livro é um dos meus favoritos." },
+  { id: "uncertain", text: "Foi publicado em 2018, se não me engano." },
+  { id: "retake", text: "Não, espera, falei errado. Vou começar de novo." },
+  { id: "negative", text: "Eu não errei ao escolher este livro." },
+  { id: "repeat", text: "Esse livro é um dos meus favoritos!" },
+];
+const hintSnapshot = JSON.stringify(hintRows);
+const hints = transcriptReviewHints(hintRows);
+assert.equal(hints.get("uncertain")?.label, "Verificar");
+assert.equal(hints.get("retake")?.label, "Provável erro");
+assert.equal(hints.get("repeat")?.kind, "check");
+assert.equal(hints.has("normal"), false);
+assert.equal(hints.has("negative"), false);
+assert.equal(
+  hintSnapshot,
+  JSON.stringify(hintRows),
+  "hints never change the project",
+);
+assert.equal(
+  transcriptReviewHints([
+    { id: "retake", text: "Agora a fala está corrigida." },
+  ]).size,
+  0,
+);
+console.log(
+  "review hints: contextual clues, accents, repeats, correction and no automatic edits passed",
 );

@@ -39,7 +39,7 @@ await promisify(execFile)(ffmpeg, [
   "-f",
   "lavfi",
   "-i",
-  "testsrc2=size=720x1280:rate=30:duration=18",
+  "testsrc2=size=720x1280:rate=30:duration=18,format=gray",
   "-f",
   "lavfi",
   "-i",
@@ -137,8 +137,8 @@ try {
     localStorage.setItem("cc.locale", "pt-BR");
     localStorage.setItem("cc.simplifiedEditor", "1");
     const phrases = [
-      "Hoje vamos falar sobre uma história que ficou comigo.",
-      "Esta é uma repetição para testar o corte do vídeo.",
+      "Esse livro foi publicado em 2018, se não me engano.",
+      "Não, espera, falei errado. Vou começar de novo.",
       "Agora a narrativa continua com o trecho que queremos manter.",
       "Podemos revisar cada frase e ouvir se a edição ficou natural.",
     ];
@@ -247,6 +247,43 @@ try {
     () => document.querySelector(".cc-simple-thumbs img")?.complete,
     "filmstrip",
   );
+  assert.ok(
+    await page.evaluate(() =>
+      [...document.querySelectorAll(".cc-simple-row .cc-simple-badge")].some(
+        (el) => el.textContent === "Verificar",
+      ),
+    ),
+    "real uncertainty badge",
+  );
+  assert.ok(
+    await page.evaluate(() =>
+      [...document.querySelectorAll(".cc-simple-row .cc-simple-badge")].some(
+        (el) => el.textContent === "Provável erro",
+      ),
+    ),
+    "real retake badge",
+  );
+  assert.ok(
+    await page.evaluate(
+      () =>
+        !!document.querySelector(
+          ".cc-simple-pause-row .cc-simple-badge.is-pause",
+        ),
+    ),
+    "timestamp pause badge",
+  );
+  await click("Cortes sugeridos pela IA");
+  await wait(
+    () => !!document.querySelector(".cc-simple-suggestion small"),
+    "visible suggestion reasons",
+  );
+  assert.match(
+    await page.evaluate(
+      () => document.querySelector(".cc-simple-scroll").innerText,
+    ),
+    /regras de texto/,
+  );
+  await click("Transcrição");
   await capture("simplified-before-cut.png");
   await page.evaluate(() =>
     document.querySelectorAll(".cc-simple-row-text")[1].click(),
@@ -289,7 +326,7 @@ try {
     ),
     "utf8",
   );
-  assert.doesNotMatch(srt, /repetição/);
+  assert.doesNotMatch(srt, /falei errado/);
   assert.match(srt, /narrativa/);
   await page.evaluate(() =>
     document.querySelector(".cc-simple-row.is-cut .cc-simple-row-text").click(),
