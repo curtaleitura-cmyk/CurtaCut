@@ -18,6 +18,14 @@ O CurtaCut é uma versão independente mantida por `curtaleitura-cmyk`. Reutiliz
 A instalação pelo `.exe` dispensa Git, Node.js e os comandos abaixo. O pacote inclui `SHA256SUMS.txt`. É um instalador experimental; ainda não há release estável assinada. Esse download do GitHub Actions expira em **16/11/2026**. [Ver execução e testes](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/39042654924).
 
 
+## Edição simplificada (prévia 0.2.22)
+
+A barra superior agora permite alternar entre **Edição simplificada** e **Edição avançada** no mesmo projeto. O novo modo reúne vídeo, transcrição clicável, cortes e restauração por frase, correção de palavras, prévia das junções, miniaturas, texto final, estatísticas e legendas SRT. Os cortes modificam a timeline real, com desfazer/refazer e salvamento automático.
+
+A aba de sugestões está preparada, mas **a análise de erros por IA ainda não está conectada**. As pausas mostradas vêm de intervalos entre palavras transcritas e precisam de revisão. Projetos com velocidade alterada, transições ou montagens complexas devem ser editados no modo avançado. [Funcionamento, limites e testes](docs/simplified-editor.md).
+
+O download acima corresponde à versão 0.2.21; a prévia 0.2.22 é gerada no Pull Request desta implementação.
+
 ## Melhorias de uso (0.2.21)
 
 - Importar em **Minhas mídias** ou arrastar para a timeline deixa de iniciar transcrição por padrão. Use **Transcrever** no cartão da mídia ou na aba de transcrição. A opção automática continua disponível em Configurações; escolhas anteriores explícitas são respeitadas.

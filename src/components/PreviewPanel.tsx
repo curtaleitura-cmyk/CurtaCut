@@ -78,6 +78,8 @@ function PreviewSourceToggle() {
 }
 
 interface PreviewPanelProps {
+  simplifiedControls?: boolean;
+  playbackRate?: number;
   state: TimelineState;
   project: ProjectDoc;
   playerRef: RefObject<PlayerRef | null>;
@@ -113,7 +115,7 @@ export const PreviewPanel = memo(function PreviewPanel({
   onItemPropChange,
   projectId, timelineId, reviewState, selectedItem, reviewRequest, inspectorOpen, onToggleInspector,
   selectedPreviewStatuses, onSelectedPreviewStatus, slipPreview,
-  hoverPreviewFrame = null,
+  hoverPreviewFrame = null, simplifiedControls = false, playbackRate = 1,
 }: PreviewPanelProps) {
   const t = useT();
   const renderProject = useMemo<ProjectDoc>(() => ({
@@ -284,7 +286,7 @@ export const PreviewPanel = memo(function PreviewPanel({
   }));
   return (
     <section style={{ display: 'flex', flex: 1, flexDirection: 'column', background: theme.panel, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
-      <div className="cc-preview-header" style={{ height: 30, padding: '0 12px', display: 'flex', alignItems: 'center', borderBottom: `0.5px solid ${theme.border}`, flexShrink: 0 }}>
+      <div className="cc-preview-header" style={{ height: 30, padding: '0 12px', display: simplifiedControls ? 'none' : 'flex', alignItems: 'center', borderBottom: `0.5px solid ${theme.border}`, flexShrink: 0 }}>
         <span style={{ fontSize: 12, color: theme.text }}>{t('预览')}</span>
         {pickMode && (
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginLeft: 10, fontSize: 11, color: theme.accent }}>
@@ -371,13 +373,14 @@ export const PreviewPanel = memo(function PreviewPanel({
               numberOfSharedAudioTags={PREVIEW_SHARED_AUDIO_TAGS}
               // Full screen black: WebKit legacy full screen div does not automatically blacken the background, and the page checkerboard will be revealed on both sides.
               style={{ width: '100%', height: '100%', backgroundColor: fullscreen ? '#000' : undefined }}
-              controls={fullscreen}
+              controls={fullscreen || simplifiedControls}
+              playbackRate={playbackRate}
               // Playback runs only through the timeline transport
               // (play/pause button + Space shortcut), not the player itself. clickToPlay
               // off = clicking the frame doesn't toggle; spaceKeyToPlayOrPause off = the app
               // shortcut is the single Space handler (the Player's own handler would
               // double-toggle it to a no-op).
-              clickToPlay={fullscreen}
+              clickToPlay={fullscreen || simplifiedControls}
               spaceKeyToPlayOrPause={false}
               acknowledgeRemotionLicense
               // No loop: playback stops at the final frame (editor convention).
