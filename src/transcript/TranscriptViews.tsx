@@ -5,18 +5,17 @@ import {
   formatGapClock,
   isCjkText,
   speakerColor,
-  speakerLabel,
   type IndexedWord,
   type WordGroup,
 } from './segment';
 import { msToFrame, type TranscriptWord } from './types';
 import { Icon } from '../components/icons';
-import { useT, getLocale } from '../i18n/locale';
+import { useT, getLocale, t } from '../i18n/locale';
 
 function localizedSpeaker(code: string) {
   if (code && !/^[A-Z]$/.test(code)) return code;
-  const label = { 'pt-BR': 'Falante', en: 'Speaker', zh: '说话人', it: 'Parlante', ru: 'Спикер' }[getLocale()];
-  return speakerLabel(code).replace('说话人', label);
+  const label = t('说话人');
+  return code ? `${label} ${code.charCodeAt(0) - 64}` : label;
 }
 
 

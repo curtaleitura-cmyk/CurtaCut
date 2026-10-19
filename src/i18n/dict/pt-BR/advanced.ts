@@ -1,4 +1,5 @@
 export default {
+  'Speaker': 'Falante',
   'Comments': 'Comentários',
   'Review comments': 'Comentários de revisão',
   'Local music-analysis models are not installed, so cards show no analysis entry. Install the Rhythm and Music Semantics packs under Settings → Local AI to analyze.': 'Para analisar músicas, instale os modelos de ritmo e semântica musical em Configurações → IA local.',
