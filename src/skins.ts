@@ -140,6 +140,11 @@ export const SKINS: readonly SkinDef[] = [
 
 const STORAGE_KEY = 'cc.skin';
 export const DEFAULT_SKIN = 'graphite';
+const skinSubscribers = new Set<() => void>();
+export function subscribeSkin(listener: () => void): () => void {
+  skinSubscribers.add(listener);
+  return () => { skinSubscribers.delete(listener); };
+}
 
 const kebab = (name: string): string => name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 
@@ -173,6 +178,7 @@ export function applySkin(id: string): void {
   if (skin === DEFAULT_SKIN) delete document.documentElement.dataset.ccSkin;
   else document.documentElement.dataset.ccSkin = skin;
   try { localStorage.setItem(STORAGE_KEY, skin); } catch { /* neglect*/ }
+  for (const listener of skinSubscribers) listener();
 }
 
 /** Boot injection (main.tsx rendering pre-tuning): Create a style sheet + apply persistent skin to avoid flashing default colors.*/

@@ -1,0 +1,38 @@
+.cc-simple,
+.cc-mode-switch {
+  --review-selected-bg: color-mix(
+    in srgb,
+    var(--cc-select) 16%,
+    var(--cc-panel)
+  );
+  --review-cut-bg: color-mix(in srgb, #db5153 14%, var(--cc-panel));
+  --review-pause-bg: color-mix(in srgb, #a665d7 12%, var(--cc-panel));
+  --review-action-bg: color-mix(in srgb, var(--cc-select) 12%, var(--cc-panel));
+}
+.cc-simple-ruler .error,
+.cc-simple-legend .error {
+  background: var(--review-cut);
+}
+.cc-simple-ruler .check,
+.cc-simple-legend .check {
+  background: var(--review-check);
+}
+.cc-simple-ruler .is-removed::after,
+.cc-simple-legend .removed {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent 0 5px,
+    rgba(var(--cc-ink-rgb), 0.4) 5px 7px
+  );
+  pointer-events: none;
+}
+.cc-simple-legend .removed {
+  position: relative;
+  border: 1px solid var(--cc-text-muted);
+  width: 13px;
+  height: 10px;
+}

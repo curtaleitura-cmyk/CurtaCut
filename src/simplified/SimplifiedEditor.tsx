@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+import { reviewTimelineSegments, segmentLabels } from "./reviewTimeline";
 import { ReviewTranscript } from "./ReviewTranscript";
 import { ReviewSummary } from "./ReviewSummary";
 import { reviewTime as clock } from "./reviewModel";
@@ -51,6 +53,10 @@ export function SimplifiedEditor(props: SimplifiedEditorProps) {
     setAssetId,
     onAdvanced,
   } = editor;
+  const segments = useMemo(
+    () => (model ? reviewTimelineSegments(model, pauses) : []),
+    [model, pauses],
+  );
   return (
     <main className="cc-simple" aria-label="Edição simplificada">
       <div className="cc-simple-heading">
@@ -245,7 +251,8 @@ export function SimplifiedEditor(props: SimplifiedEditorProps) {
           <small>Tempo do arquivo original · clique para navegar</small>
           <span className="cc-simple-legend">
             <b className="kept" /> Mantido <b className="cut" /> Corte{" "}
-            <b className="pause" /> Pausa
+            <b className="check" /> Verificar <b className="pause" /> Pausa{" "}
+            <b className="removed" /> Corte aplicado
           </span>
         </div>
         <div className="cc-simple-thumbs">
@@ -298,23 +305,16 @@ export function SimplifiedEditor(props: SimplifiedEditorProps) {
               sourceSeek(Math.max(0, sourceFrame - fps));
           }}
         >
-          {model?.rows.map((row) => (
+          {segments.map((segment, i) => (
             <span
-              key={row.id}
-              className={row.keptFrames === 0 ? "cut" : "kept"}
+              key={i}
+              className={`${segment.kind}${segment.removed ? " is-removed" : ""}`}
+              data-review-kind={segment.kind}
+              data-removed={segment.removed}
+              title={`${segmentLabels[segment.kind]}${segment.removed ? " · corte aplicado" : ""} · ${clock(segment.start / fps)} – ${clock(segment.end / fps)}`}
               style={{
-                left: `${(row.start / model.duration) * 100}%`,
-                width: `${((row.end - row.start) / model.duration) * 100}%`,
-              }}
-            />
-          ))}
-          {pauses.map((pause, i) => (
-            <span
-              key={`p${i}`}
-              className="pause"
-              style={{
-                left: `${(pause.start / (model?.duration ?? 1)) * 100}%`,
-                width: `${((pause.end - pause.start) / (model?.duration ?? 1)) * 100}%`,
+                left: `${(segment.start / (model?.duration ?? 1)) * 100}%`,
+                width: `${((segment.end - segment.start) / (model?.duration ?? 1)) * 100}%`,
               }}
             />
           ))}

@@ -261,7 +261,7 @@ export function useSimplifiedEditor({
   const keptFrames =
     model?.kept.reduce((total, span) => total + span.end - span.start, 0) ?? 0;
   const removedFrames = Math.max(0, (model?.duration ?? 0) - keptFrames);
-  const pauses =
+  const pauses = useMemo(() =>
     model?.words.flatMap((word, i) =>
       i > 0 && word.start - model.words[i - 1]!.end >= 1000
         ? [
@@ -271,7 +271,7 @@ export function useSimplifiedEditor({
             },
           ]
         : [],
-    ) ?? [];
+    ) ?? [], [model, fps]);
   const finalText = useMemo(
     () => (model ? reviewFinalText(model, fps) : ""),
     [model, fps],

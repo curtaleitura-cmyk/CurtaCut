@@ -1,5 +1,6 @@
 // Actual browser acceptance check. Every fixture stays in an isolated profile.
 import assert from "node:assert/strict";
+import { verifyReviewAppearance } from "./reviewAppearance.browser.mjs";
 import { createHash, randomUUID } from "node:crypto";
 import {
   mkdir,
@@ -295,6 +296,7 @@ try {
     "real cut row",
   );
   await capture("simplified-after-cut.png");
+  await verifyReviewAppearance(page, capture, wait);
   // Persisted state is the original project's real split video clips.
   await new Promise((r) => setTimeout(r, 2400));
 
@@ -377,6 +379,20 @@ try {
   await wait(
     () => !!document.querySelector(".cc-simple-row.is-cut"),
     "saved cut reopens",
+  );
+  assert.equal(
+    await page.evaluate(() => document.documentElement.dataset.ccSkin),
+    "latte",
+    "appearance survives reopening",
+  );
+  await page.evaluate(() => {
+    const select = document.querySelector('select[aria-label="Aparência"]');
+    select.value = "dark";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  await wait(
+    () => !document.documentElement.dataset.ccSkin,
+    "dark appearance restored",
   );
   await capture("simplified-reopened-project.png");
   console.log(

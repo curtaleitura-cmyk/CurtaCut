@@ -10,6 +10,7 @@ import {
   McpGuideDialog, MediaCleanupDialog, SettingsDialog, ShortcutsDialog,
 } from './dashboardDialogs';
 import { useDashboardDialogPrefetch } from './dashboardDialogLoaders';
+import { AppearanceToggle } from '../settings/AppearanceToggle';
 import { SkinPicker } from '../settings/SkinPicker';
 import { LocaleToggle } from '../TopBar';
 import {
@@ -68,6 +69,7 @@ export function DashboardTitlebarContent({ model }: { model: DashboardModel }) {
         <button onClick={() => model.setDialog('mcp', true)} data-tip={t('外部 Agent 接入 (MCP)')} aria-label={t('外部 Agent 接入 (MCP)')} className="cc-header-btn cc-tip cc-tip-r" style={settingsBtn}><Icon name="plug" size={16} /></button>
         <button onClick={() => model.setDialog('shortcuts', true)} data-tip={t('编辑快捷键')} aria-label={t('编辑快捷键')} className="cc-header-btn cc-tip cc-tip-r" style={settingsBtn}><Icon name="keyboard" size={16} /></button>
         <LocaleToggle />
+        <AppearanceToggle />
         <SkinPicker />
         <button onClick={() => model.setDialog('settings', true)} data-tip={t('设置 · API 密钥')} aria-label={t('设置 · API 密钥')} className="cc-header-btn cc-tip cc-tip-r" style={settingsBtn}><Icon name="sliders" size={16} /></button>
       </span>

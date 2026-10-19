@@ -4,6 +4,7 @@ import { theme } from '../theme';
 import { Icon } from './icons';
 import { ExportHistory } from './ExportHistory';
 import { GenerationActivity } from './GenerationActivity';
+import { AppearanceToggle } from './settings/AppearanceToggle';
 import { SkinPicker } from './settings/SkinPicker';
 import { loadMcpGuideDialog } from './settings/mcpGuideLoader';
 import { ALL_LOCALES, getLocale, setLocale, useT } from '../i18n/locale';
@@ -104,13 +105,14 @@ export function TopBar({ projectId, projectName, canUndo, canRedo, exporting, ex
       {/* self-contained: trigger + popover, global export history, zero props */}
       <ExportHistory />
       </>}
+      <AppearanceToggle />
       <LocaleToggle />
       {!simplified && <TopBarIconButton icon="layoutPanel" label={t('切换面板布局')} onClick={() => invokeAction('toggle-layout', undefined, 'toolbar')} />}
       <button onClick={() => invokeAction('open-export', undefined, 'toolbar')}
         className="cc-tip cc-tip-r"
         data-tip={exporting ? t('查看后台导出任务') : t('导出 MP4')}
         aria-label={exporting ? t('查看后台导出任务') : t('导出 MP4')}
-        style={{ minWidth: 58, height: 26, background: theme.accent, color: theme.onAccent, border: 'none', borderRadius: 2, padding: '0 8px', fontSize: 12, fontWeight: 600, cursor: 'pointer', marginLeft: 4 }}>
+        style={{ minWidth: 58, height: 26, background: theme.accent, color: theme.onAccent, border: 'none', borderRadius: 8, padding: '0 8px', fontSize: 12, fontWeight: 600, cursor: 'pointer', marginLeft: 4 }}>
         {exporting ? t('{n} 个导出', { n: Math.max(1, exportJobCount) }) : t('导出')}
       </button>
       <div title={t('账户')} style={{ width: 20, height: 20, borderRadius: '50%', marginLeft: 2, background: 'conic-gradient(from 210deg, #6d6cff, #ff5f9e, #ffb35f, #6d6cff)', flexShrink: 0 }} />

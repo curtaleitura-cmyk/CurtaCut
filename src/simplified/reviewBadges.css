@@ -21,9 +21,9 @@
 }
 .cc-simple-pause-row {
   margin: 4px 0;
-  border: 1px solid #453851;
-  border-radius: 6px;
-  background: #242333;
+  border: 1px solid var(--cc-border);
+  border-radius: 8px;
+  background: var(--review-pause-bg);
 }
 .cc-simple .cc-simple-pause-row button {
   display: flex;
@@ -34,11 +34,11 @@
   background: transparent;
   border: 0;
   font-size: 11px;
-  color: #b5b0c0;
+  color: var(--cc-text-muted);
 }
 .cc-simple-pause-row button > span:last-child {
   font-size: 12px;
-  color: #d5cede;
+  color: var(--cc-text);
 }
 .cc-simple-suggestion {
   display: flex;
@@ -55,7 +55,7 @@
   line-height: 1.5;
 }
 .cc-simple-suggestion small {
-  color: #b4c0ce;
+  color: var(--cc-text-muted);
 }
 .cc-simple-pause .cc-simple-badge {
   margin-right: 8px;

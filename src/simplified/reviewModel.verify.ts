@@ -1,3 +1,4 @@
+import { reviewTimelineSegments } from "./reviewTimeline";
 import { transcriptReviewHints } from "./reviewHints";
 import assert from "node:assert/strict";
 import { historyReduce } from "../editor/reduce";
@@ -192,4 +193,43 @@ assert.equal(
 );
 console.log(
   "review hints: contextual clues, accents, repeats, correction and no automatic edits passed",
+);
+
+const paletteModel = {
+  ...model(),
+  duration: 180,
+  rows: model().rows.map((row, i) => ({
+    ...row,
+    text:
+      i === 0
+        ? "Se não me engano."
+        : i === 1
+          ? "Falei errado."
+          : "Segue a leitura.",
+  })),
+  kept: [
+    { start: 0, end: 45 },
+    { start: 70, end: 180 },
+  ],
+};
+const segments = reviewTimelineSegments(paletteModel, [
+  { start: 100, end: 110 },
+]);
+assert.equal(
+  segments.reduce((sum, segment) => sum + segment.end - segment.start, 0),
+  180,
+);
+assert.equal(segments.find((segment) => segment.start === 0)?.kind, "check");
+assert.ok(
+  segments.some((segment) => segment.kind === "error" && segment.removed),
+);
+assert.ok(segments.some((segment) => segment.kind === "pause"));
+assert.equal(
+  segments
+    .filter((segment) => segment.removed)
+    .reduce((sum, segment) => sum + segment.end - segment.start, 0),
+  25,
+);
+console.log(
+  "review timeline: complete source coverage, shared hint kinds and real removed windows passed",
 );

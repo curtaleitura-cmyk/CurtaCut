@@ -1,4 +1,4 @@
-# Modo de Edição Simplificada — prévia 0.2.23
+# Modo de Edição Simplificada — prévia 0.2.24
 
 No computador, abra um projeto e use **Edição simplificada** na barra superior. Importe um vídeo e clique em **Transcrever** quando precisar gerar a transcrição. O modo usa as palavras e os tempos reais produzidos pelo provedor configurado, inclusive Whisper local.
 
@@ -12,9 +12,15 @@ No computador, abra um projeto e use **Edição simplificada** na barra superior
 
 ## Projeto e exportação compartilhados
 
-Os dois modos usam as mesmas ações, histórico, salvamento e mídia. Não existe uma lista paralela de cortes. A timeline compacta representa os tempos do **arquivo original**; o player da edição segue os tempos após os cortes. Verde indica conteúdo preservado, vermelho indica intervalos removidos e roxo indica lacunas entre palavras transcritas.
+Os dois modos usam as mesmas ações, histórico, salvamento e mídia. Não existe uma lista paralela de cortes. A timeline compacta representa os tempos do **arquivo original**; o player da edição segue os tempos após os cortes. Verde indica conteúdo preservado sem indicação; amarelo, **Verificar**; vermelho, **Provável erro** ou conteúdo removido sem indicação; roxo, **Pausa**. Balões, legenda e timeline compartilham as mesmas cores sólidas. A hachura distingue um **corte realmente aplicado**, inclusive quando o trecho tem um selo amarelo ou roxo. Uma cor de sugestão sozinha não significa remoção.
 
 Texto final, estatísticas e SRT se referem ao vídeo selecionado. O SRT usa os tempos da timeline editada. **Exportar vídeo** abre o exportador existente, que exporta o projeto inteiro, incluindo outras faixas. A exportação preserva a mídia original.
+
+## Aparência
+
+Use o seletor **Claro/Escuro** na barra superior do editor ou da tela de projetos. Ele usa o sistema de temas existente; painéis, diálogos e editor avançado acompanham a escolha. A aparência fica salva ao reabrir o aplicativo e não altera o projeto, o vídeo original ou a exportação. O seletor de temas avançado permanece disponível e acompanha a mesma preferência.
+
+Os painéis, a caixa de texto final, os botões e os segmentos da timeline têm cantos levemente arredondados. O modo claro ajusta também as cores do texto, bordas, campos e seleção.
 
 ## Limites desta prévia
 
@@ -36,3 +42,7 @@ Velocidade alterada, edição de áudio por palavras, repetição/reordenação 
 ![Transcrição com um corte real](screenshots/simplified-after-cut.png)
 
 ![Os mesmos cortes no editor avançado](screenshots/simplified-shared-advanced-timeline.png)
+
+## Captura em modo claro
+
+![Mesmo projeto em modo claro](screenshots/simplified-light.png)
