@@ -6,12 +6,12 @@ import { usePreviewMediaSource } from "../media/previewMedia";
 import {
   buildReviewModel,
   planReviewCut,
-  planReviewRestore,
   reviewFinalText,
   reviewSrt,
   sourceToTimeline,
   timelineToSource,
   type ReviewRow,
+  type SourceSpan,
 } from "./reviewModel";
 const makeId = () => `item_${crypto.randomUUID()}`;
 export interface SimplifiedEditorProps {
@@ -157,26 +157,37 @@ export function useSimplifiedEditor({
       play ? Math.ceil((row.speechEnd * fps) / 1000) : undefined,
     );
   }
-  function changeCut(restore: boolean, row = selected) {
+  function changeCut(restore: boolean, row: SourceSpan | undefined = selected) {
     if (!commands || !model || !row) return;
     try {
       playerRef.current?.pause();
       original.current?.pause();
       stopAt.current = null;
-      const actions = restore
-        ? planReviewRestore(model, row, track, makeId)
-        : planReviewCut(model, row, makeId);
-      commands.batch(actions, restore ? "Restaurar trecho" : "Cortar trecho");
+      if (restore) {
+        commands.undo();
+        setNotice("Última alteração desfeita em todas as faixas.");
+        return;
+      }
+      const actions = planReviewCut(model, row, makeId);
+      commands.batch(actions, "Cortar trecho");
       setNotice(
         actions.length
-          ? restore
-            ? "Trecho restaurado na timeline."
-            : "Corte aplicado à imagem e ao som. Você pode restaurar ou desfazer."
+          ? "Corte aplicado ao vídeo, áudio e legendas, sem espaços. Use Desfazer para recuperar."
           : "Nenhuma alteração necessária.",
       );
     } catch (error) {
       setNotice(error instanceof Error ? error.message : String(error));
     }
+  }
+  function removeAllPauses() {
+    if (!commands || !model) return;
+    try {
+      playerRef.current?.pause();
+      original.current?.pause();
+      stopAt.current = null;
+      commands.batch(planReviewCut(model, pauses, makeId), "Excluir todas as pausas");
+      setNotice("Pausas removidas de vídeo, áudio e legendas, sem espaços. Use Desfazer para recuperar.");
+    } catch (error) { setNotice(error instanceof Error ? error.message : String(error)); }
   }
   function hearJoin() {
     if (!model || !selected) return;
@@ -320,6 +331,7 @@ export function useSimplifiedEditor({
     sourceSeek,
     editedSeek,
     changeCut,
+    removeAllPauses,
     hearJoin,
     fixWord,
     importVideo,

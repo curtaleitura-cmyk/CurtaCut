@@ -68,7 +68,7 @@ function renderTimeline(props: EditorWorkspaceViewProps) {
 
 export function EditorWorkspaceView(props: EditorWorkspaceViewProps) {
   useWorkspaceDialogPrefetch();
-  const [simple,setSimple] = useState(() => { try { return localStorage.getItem('cc.simplifiedEditor') === '1'; } catch { return false; } });
+  const [simple,setSimple] = useState(() => { try { return localStorage.getItem('cc.simplifiedEditor') !== '0'; } catch { return true; } });
   const changeMode = (value:boolean) => { setSimple(value); try { localStorage.setItem('cc.simplifiedEditor',value?'1':'0'); } catch { /* preference only */ } };
   return (
     <div

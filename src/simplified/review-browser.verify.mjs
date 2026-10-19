@@ -136,7 +136,7 @@ try {
   const projectId = await page.evaluate(async () => {
     const store = await import("/src/persist/projectStore.ts");
     localStorage.setItem("cc.locale", "pt-BR");
-    localStorage.setItem("cc.simplifiedEditor", "1");
+    localStorage.removeItem("cc.simplifiedEditor");
     const phrases = [
       "Esse livro foi publicado em 2018, se não me engano.",
       "Não, espera, falei errado. Vou começar de novo.",
@@ -217,7 +217,7 @@ try {
   }
   async function click(text) {
     const found = await page.evaluate((text) => {
-      const selector = ["Marcar corte", "Restaurar"].includes(text)
+      const selector = ["Marcar corte", "Desfazer última alteração"].includes(text)
         ? ".cc-simple-tools button"
         : "button";
       const b = [...document.querySelectorAll(selector)].find(
@@ -290,7 +290,7 @@ try {
     document.querySelectorAll(".cc-simple-row-text")[1].click(),
   );
   await new Promise((r) => setTimeout(r, 150));
-  await click("Marcar corte");
+  await page.evaluate(() => document.querySelectorAll('.cc-simple-row .cc-review-trash')[1].click());
   await wait(
     () => !!document.querySelector(".cc-simple-row.is-cut"),
     "real cut row",
@@ -356,16 +356,22 @@ try {
     document.querySelector(".cc-simple-row.is-cut .cc-simple-row-text").click(),
   );
   await new Promise((r) => setTimeout(r, 100));
-  await click("Restaurar");
+  await click("Desfazer última alteração");
   await wait(
     () => document.querySelectorAll(".cc-simple-row.is-cut").length === 0,
     "restored",
   );
-  await click("Desfazer");
+  await click("Refazer");
   await wait(
     () => !!document.querySelector(".cc-simple-row.is-cut"),
-    "undo restore",
+    "redo synchronized cut",
   );
+
+  await click("Excluir todas as pausas");
+  await wait(() => document.querySelector('.cc-remove-pauses').disabled, "all pauses removed");
+  await capture("simplified-pauses-removed.png");
+  await click("Desfazer");
+  await wait(() => !document.querySelector('.cc-remove-pauses').disabled, "bulk pause deletion undone");
 
   await new Promise((resolve) => setTimeout(resolve, 800));
   await page.evaluate(async () => {

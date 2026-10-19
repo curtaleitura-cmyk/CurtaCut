@@ -25,7 +25,7 @@
   border-radius: 8px;
   background: var(--review-pause-bg);
 }
-.cc-simple .cc-simple-pause-row button {
+.cc-simple .cc-simple-pause-row button:not(.cc-review-trash) {
   display: flex;
   gap: 10px;
   align-items: center;
@@ -60,3 +60,12 @@
 .cc-simple-pause .cc-simple-badge {
   margin-right: 8px;
 }
+
+.cc-simple-row, .cc-simple-pause-row, .cc-simple-suggestion, .cc-simple-pause { position: relative; padding-right: 44px; }
+.cc-simple .cc-review-trash { position: absolute; right: 8px; top: 8px; opacity: 0; padding: 6px; border-radius: 8px; color: var(--cc-text); background: var(--cc-panel); }
+.cc-simple-row:hover > .cc-review-trash, .cc-simple-pause-row:hover > .cc-review-trash, .cc-simple-suggestion:hover > .cc-review-trash, .cc-simple-pause:hover > .cc-review-trash, .cc-simple .cc-review-trash:focus-visible { opacity: 1; }
+.cc-simple .cc-review-trash:disabled { visibility: hidden; }
+.cc-remove-pauses { margin: 8px 12px; padding: 8px 12px; border-radius: 8px; }
+@media (hover: none) { .cc-simple .cc-review-trash { opacity: 1; } }
+
+.cc-simple .cc-simple-row { padding-right: 48px; }

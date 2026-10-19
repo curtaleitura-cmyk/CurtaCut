@@ -2,7 +2,7 @@ import type { MediaAsset, TimelineItem, TimelineState } from "../editor/types";
 import type { AtomicAction } from "../editor/reduce";
 import { timelineItemAssetId } from "../editor/mediaAssetUsage";
 import { sourceWindowForTimelineRange } from "../editor/sourceLimit";
-import { planSilenceRemoval } from "../editor/silenceRebuild";
+import { rippleReviewRanges } from "./reviewRipple";
 import {
   packTranscriptPhrases,
   joinTranscriptWords,
@@ -22,6 +22,7 @@ export interface ReviewRow extends SourceSpan {
   keptFrames: number;
 }
 export interface ReviewModel {
+  state: TimelineState;
   asset: MediaAsset;
   clips: TimelineItem[];
   words: TranscriptWord[];
@@ -176,7 +177,7 @@ export function buildReviewModel(
       };
     })
     .filter((row) => row.end > row.start);
-  return { asset, clips, words, rows, duration, kept, blocker };
+  return { state, asset, clips, words, rows, duration, kept, blocker };
 }
 export function sourceToTimeline(
   model: ReviewModel,
@@ -207,7 +208,7 @@ export function timelineToSource(
 /** Standard split/remove operations; no parallel cut state is saved. */
 export function planReviewCut(
   model: ReviewModel,
-  row: SourceSpan,
+  row: SourceSpan | SourceSpan[],
   makeId: () => string,
 ): AtomicAction[] {
   if (model.blocker) throw new Error(model.blocker);
@@ -221,20 +222,13 @@ export function planReviewCut(
           },
         ]
       : [];
-  return [
-    ...preserveMaster,
-    ...[...model.clips].reverse().flatMap((clip) => {
-      const from = Math.max(0, row.start - (clip.srcInFrame ?? 0));
-      const to = Math.min(
-        clip.durationInFrames,
-        row.end - (clip.srcInFrame ?? 0),
-      );
-      return to - from < 2
-        ? []
-        : (planSilenceRemoval(clip, [{ fromFrame: from, toFrame: to }], makeId)
-            .actions as AtomicAction[]);
-    }),
-  ];
+  const ranges = mergeSpans((Array.isArray(row) ? row : [row]).flatMap(span => model.clips.flatMap(clip => {
+    const from = Math.max(span.start, clip.srcInFrame ?? 0);
+    const to = Math.min(span.end, (clip.srcInFrame ?? 0) + clip.durationInFrames);
+    return to > from ? [{ start: clip.startFrame + from - (clip.srcInFrame ?? 0), end: clip.startFrame + to - (clip.srcInFrame ?? 0) }] : [];
+  })));
+  if (!ranges.length) return [];
+  return [...preserveMaster, { type: 'setFullState', state: rippleReviewRanges(model.state, ranges, makeId) }];
 }
 /** Restore only source windows absent from the real lane, using ordinary ripple insertion. */
 export function planReviewRestore(

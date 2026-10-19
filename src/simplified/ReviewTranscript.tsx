@@ -1,6 +1,6 @@
 import { Fragment, useMemo } from "react";
 import type { useSimplifiedEditor } from "./useSimplifiedEditor";
-import { reviewTime as clock } from "./reviewModel";
+import { reviewTime as clock, type SourceSpan } from "./reviewModel";
 import { transcriptReviewHints, type ReviewHint } from "./reviewHints";
 import "./reviewBadges.css";
 
@@ -41,8 +41,16 @@ export function ReviewTranscript({
     () => transcriptReviewHints(model?.rows ?? []),
     [model],
   );
+  const trash = (span: SourceSpan, label: string) => (
+    <button className="cc-review-trash" aria-label={label} title={label}
+      disabled={!!model?.blocker || !model?.kept.some(w => w.end > span.start && w.start < span.end)}
+      onClick={(event) => { event.stopPropagation(); changeCut(false, span); }}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7" /></svg>
+    </button>
+  );
   return (
     <>
+      {!!pauses.length && <button className="cc-remove-pauses" disabled={!!model?.blocker || !pauses.some(p => model?.kept.some(w => w.end > p.start && w.start < p.end))} onClick={editor.removeAllPauses}>Excluir todas as pausas</button>}
       {!model ? (
         <div className="cc-simple-empty">
           <h2>Comece pelo seu vídeo</h2>
@@ -62,11 +70,9 @@ export function ReviewTranscript({
           {model.rows
             .filter((row) => hints.has(row.id))
             .map((row) => (
-              <button
-                key={row.id}
-                className="cc-simple-suggestion"
-                onClick={() => select(row, true)}
-              >
+              <div key={row.id} className="cc-simple-suggestion">
+                <button onClick={() => select(row, true)}>Ouvir trecho</button>
+                {trash(row, "Excluir trecho sugerido")}
                 <HintBadge hint={hints.get(row.id)} />
                 <span>
                   {clock(row.speechStart / 1000)} –{" "}
@@ -74,7 +80,7 @@ export function ReviewTranscript({
                 </span>
                 <strong>{row.text}</strong>
                 <small>{hints.get(row.id)!.reason}</small>
-              </button>
+              </div>
             ))}
           {!hints.size && (
             <p>
@@ -89,15 +95,13 @@ export function ReviewTranscript({
           </p>
           {pauses.length ? (
             pauses.map((pause, i) => (
-              <button
-                key={i}
-                className="cc-simple-pause"
-                onClick={() => sourceSeek(pause.start, true, pause.end)}
-              >
+              <div key={i} className="cc-simple-pause">
+                {trash(pause, "Excluir pausa")}
+                <button onClick={() => sourceSeek(pause.start, true, pause.end)}>Ouvir pausa</button>
                 <span className="cc-simple-badge is-pause">Pausa</span> ▶{" "}
                 {clock(pause.start / fps)} – {clock(pause.end / fps)} ·{" "}
                 {((pause.end - pause.start) / fps).toFixed(1)}s
-              </button>
+              </div>
             ))
           ) : (
             <p>
@@ -129,6 +133,7 @@ export function ReviewTranscript({
               data-row-id={row.id}
               className={`cc-simple-row ${row.keptFrames === 0 ? "is-cut" : ""} ${selected?.id === row.id ? "is-selected" : ""} ${active?.id === row.id ? "is-playing" : ""}`}
             >
+              {trash(row, "Excluir trecho")}
               <div className="cc-simple-row-meta">
                 <button
                   onClick={() => select(row, true)}
@@ -157,13 +162,13 @@ export function ReviewTranscript({
               </button>
               <div className="cc-simple-row-actions">
                 <button
-                  disabled={!!model.blocker}
+                  disabled={row.keptFrames === 0 ? !editor.topBar.canUndo : !!model.blocker}
                   onClick={() => {
                     setSelectedId(row.id);
                     changeCut(row.keptFrames === 0, row);
                   }}
                 >
-                  {row.keptFrames === 0 ? "Restaurar" : "Marcar corte"}
+                  {row.keptFrames === 0 ? "Desfazer última alteração" : "Marcar corte"}
                 </button>
                 <details
                   onToggle={(event) => {
@@ -195,6 +200,7 @@ export function ReviewTranscript({
               )
               .map((pause, i) => (
                 <div key={i} className="cc-simple-pause-row">
+                  {trash(pause, "Excluir pausa")}
                   <button
                     onClick={() => sourceSeek(pause.start, true, pause.end)}
                     aria-label={`Reproduzir pausa em ${clock(pause.start / fps)}`}

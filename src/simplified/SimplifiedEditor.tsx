@@ -170,8 +170,8 @@ export function SimplifiedEditor(props: SimplifiedEditorProps) {
             </button>
           )}
           <p className="cc-simple-hint">
-            Clique em uma frase para navegar. Trechos vermelhos continuam
-            disponíveis no original e podem ser restaurados.
+            Clique em uma frase para navegar. O original é preservado.
+            Use Desfazer para recuperar a última alteração.
           </p>
           {model && model.clips.length === 0 && (
             <button onClick={() => commands?.addMediaItem(model.asset)}>
@@ -216,10 +216,10 @@ export function SimplifiedEditor(props: SimplifiedEditorProps) {
               Marcar corte
             </button>
             <button
-              disabled={!selected || !!model?.blocker}
-              onClick={() => changeCut(true)}
+              disabled={!topBar.canUndo}
+              onClick={() => commands?.undo()}
             >
-              Restaurar
+              Desfazer última alteração
             </button>
             <button
               disabled={!selected || !model?.clips.length}

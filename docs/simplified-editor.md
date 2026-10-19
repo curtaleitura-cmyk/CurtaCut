@@ -1,4 +1,4 @@
-# Modo de Edição Simplificada — prévia 0.2.24
+# Modo de Edição Simplificada — prévia 0.2.25
 
 No computador, abra um projeto e use **Edição simplificada** na barra superior. Importe um vídeo e clique em **Transcrever** quando precisar gerar a transcrição. O modo usa as palavras e os tempos reais produzidos pelo provedor configurado, inclusive Whisper local.
 
@@ -46,3 +46,13 @@ Velocidade alterada, edição de áudio por palavras, repetição/reordenação 
 ## Captura em modo claro
 
 ![Mesmo projeto em modo claro](screenshots/simplified-light.png)
+
+## Exclusão sincronizada — 0.2.25
+
+O modo simplificado é o padrão quando ainda não há uma escolha de modo salva. A escolha explícita do editor avançado continua sendo lembrada.
+
+A lixeira aparece ao passar o mouse ou navegar pelo teclado sobre trechos, sugestões e pausas; em telas de toque, fica visível. Excluir remove o intervalo de todas as faixas e desloca o restante, incluindo áudio separado e legendas manuais ou vinculadas. “Excluir todas as pausas” aplica as lacunas indicadas em uma única operação. Pausas são intervalos sem palavras transcritas de pelo menos um segundo, não detecção de silêncio acústico.
+
+Use **Desfazer** para recuperar a última operação inteira, com todas as faixas sincronizadas. A antiga restauração isolada de trecho foi substituída por esse comando para evitar recuperar somente o vídeo. O histórico de desfazer vale durante a sessão; os cortes são salvos no projeto, sem modificar o arquivo original. Faixas bloqueadas impedem a operação.
+
+Os textos do painel do assistente, fluxos iniciais, abas de mídia, estilos de legenda, pausas e identificação padrão de falantes foram traduzidos para português. Nomes e conteúdos escritos pelo usuário são preservados.

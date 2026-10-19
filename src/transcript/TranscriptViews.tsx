@@ -11,7 +11,14 @@ import {
 } from './segment';
 import { msToFrame, type TranscriptWord } from './types';
 import { Icon } from '../components/icons';
-import { useT } from '../i18n/locale';
+import { useT, getLocale } from '../i18n/locale';
+
+function localizedSpeaker(code: string) {
+  if (code && !/^[A-Z]$/.test(code)) return code;
+  const label = { 'pt-BR': 'Falante', en: 'Speaker', zh: '说话人', it: 'Parlante', ru: 'Спикер' }[getLocale()];
+  return speakerLabel(code).replace('说话人', label);
+}
+
 
 interface WordRowProps {
   words: IndexedWord[];
@@ -67,7 +74,7 @@ export function ParagraphView({ groups, deleted, editMode, onWord }: ViewProps) 
       {groups.map((p, i) => (
         <div key={i} className="cc-tx-speech">
           <div className="cc-tx-speech-label" style={{ color: speakerColor(p.speaker) }}>
-            {speakerLabel(p.speaker)}
+            {localizedSpeaker(p.speaker)}
           </div>
           <div className="cc-tx-speech-body">
             <span className="cc-tx-grip" aria-hidden>⋮⋮</span>
@@ -174,7 +181,7 @@ export function ScriptView({
               }}
             >
               <div className="cc-tx-speech-label" style={{ color: speakerColor(row.speaker) }}>
-                {speakerLabel(row.speaker)}
+                {localizedSpeaker(row.speaker)}
               </div>
               <div className="cc-tx-speech-body">
                 <span
@@ -199,7 +206,7 @@ export function ScriptView({
                 onClick={() => setAdjustGi(open ? null : row.afterWordGi)}
                 title={t('点击调整气口时长')}
               >
-                Gap: {formatGapClock(displayMs || (row.removed ? 0 : row.gapMs))}
+                {getLocale() === 'pt-BR' ? 'Pausa' : 'Gap'}: {formatGapClock(displayMs || (row.removed ? 0 : row.gapMs))}
                 {row.removed ? t(' · 已删除') : ''}
               </button>
               {!row.removed ? (
@@ -251,7 +258,7 @@ export function SegmentView({ groups, deleted, editMode, onWord, fps }: ViewProp
       {groups.map((s, i) => (
         <div key={i} className="cc-tx-speech">
           <div className="cc-tx-speech-label" style={{ color: speakerColor(s.speaker) }}>
-            {speakerLabel(s.speaker)}
+            {localizedSpeaker(s.speaker)}
             <span className="cc-tx-muted" style={{ marginLeft: 8, fontWeight: 400 }}>
               {msToFrame(s.words[0]!.start, fps)}f
             </span>

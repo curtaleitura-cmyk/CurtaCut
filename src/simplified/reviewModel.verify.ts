@@ -233,3 +233,33 @@ assert.equal(
 console.log(
   "review timeline: complete source coverage, shared hint kinds and real removed windows passed",
 );
+
+// Ripple edits must synchronize detached audio and both manual and bound captions.
+const { rippleReviewRanges } = await import('./reviewRipple');
+const { resolveCaptionWords } = await import('../captions/resolve');
+const synced = {
+  ...editor.getState(), items: [clip, { ...clip, id: 'sound', kind: 'audio' as const, track: 'A1', transcript: undefined }],
+  tracks: { V1: { kind: 'video' as const }, A1: { kind: 'audio' as const }, C1: { kind: 'caption' as const, captions: { enabled: true, template: 'plain' as const, pacing: 'phrase' as const, sourceItemId: clip.id } } },
+  captions: { enabled: true, template: 'plain' as const, pacing: 'phrase' as const, words },
+};
+const syncedCut = rippleReviewRanges(synced, [{ start: 60, end: 120 }], id);
+assert.deepEqual(syncedCut.items.filter(i => i.track === 'V1').map(i => [i.startFrame, i.durationInFrames, i.srcInFrame ?? 0]), [[0, 60, 0], [60, 60, 120]]);
+assert.deepEqual(syncedCut.items.filter(i => i.track === 'A1').map(i => [i.startFrame, i.durationInFrames, i.srcInFrame ?? 0]), [[0, 60, 0], [60, 60, 120]]);
+assert.deepEqual(syncedCut.captions!.words!.map(w => w.text), ['Primeira', 'frase.', 'Final', 'certo.']);
+assert.equal(syncedCut.captions!.words![2]!.start, 2000);
+const projected = resolveCaptionWords(syncedCut.tracks!.C1!.captions!, syncedCut.items, 30);
+assert.deepEqual(projected.map(w => w.text), ['Primeira', 'frase.', 'Final', 'certo.']);
+assert.equal(projected[2]!.start, 2000);
+const bulk = rippleReviewRanges(synced, [{ start: 45, end: 60 }, { start: 105, end: 120 }], id);
+assert.equal(bulk.items.filter(i => i.track === 'V1').reduce((n, i) => n + i.durationInFrames, 0), 150);
+assert.equal(bulk.items.filter(i => i.track === 'A1').reduce((n, i) => n + i.durationInFrames, 0), 150);
+assert.equal(bulk.captions!.words![4]!.start, 3000);
+assert.throws(() => rippleReviewRanges({ ...synced, tracks: { ...synced.tracks, A1: { kind: 'audio', locked: true } } }, [{ start: 60, end: 120 }], id), /Desbloqueie/);
+console.log('review ripple: detached audio, bound/manual captions and bulk pauses remain synchronized');
+
+const syncDoc = docFromTimeline(synced);
+const syncHistory = { past: [] as ProjectDoc[], present: syncDoc, future: [] as ProjectDoc[] };
+const syncActions = planReviewCut(buildReviewModel(synced, asset), [{ start: 45, end: 60 }, { start: 105, end: 120 }], id);
+const cutHistory = historyReduce(syncHistory, { type: 'batch', actions: syncActions });
+assert.equal(cutHistory.past.length, 1, 'bulk cut is one history entry');
+assert.deepEqual(historyReduce(cutHistory, { type: 'undo' }).present, syncDoc, 'undo restores video, audio and caption state together');

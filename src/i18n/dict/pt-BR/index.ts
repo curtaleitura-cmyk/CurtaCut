@@ -5,10 +5,11 @@ import core from './core';
 import editing from './editing';
 import exportCopy from './export';
 import settings from './settings';
+import advanced from './advanced';
 
 // The upstream Chinese keys remain stable. English fallback covers every
 // upstream UI entry while Portuguese is expanded incrementally.
-const translations: Record<string, string> = { ...curtacut, ...core, ...editing, ...exportCopy, ...settings };
+const translations: Record<string, string> = { ...curtacut, ...core, ...editing, ...exportCopy, ...settings, ...advanced };
 export const PT_BR: Record<string, string> = Object.fromEntries(
   Object.entries(EN).flatMap(([key, english]) => translations[english] === undefined ? [] : [[key, translations[english]]]),
 );
