@@ -63,6 +63,10 @@ jobs:
       - name: Verify simplified editor uses real video cuts
         shell: pwsh
         run: |
+          node --import tsx server/plugins/pause-analysis.verify.ts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --import tsx src/simplified/audioReviewRows.verify.ts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --import tsx src/simplified/reviewModel.verify.ts
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --import tsx src/editor/split.verify.ts

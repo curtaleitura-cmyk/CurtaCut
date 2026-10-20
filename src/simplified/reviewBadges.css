@@ -76,3 +76,11 @@
 .cc-simple .cc-review-word.is-cut { opacity: .45; text-decoration: line-through; }
 .cc-simple-badge.is-error { background: var(--review-check); }
 .cc-simple .cc-simple-ruler .error, .cc-simple .cc-simple-legend .error { background: var(--review-check); }
+
+.cc-pause-tools { padding: 8px 12px; font-size: 12px; }
+.cc-pause-tools input[type=number] { max-width: 85px; margin-left: 8px; }
+.cc-pause-tools progress { width: 100%; accent-color: var(--review-pause); }
+.cc-pause-confirm { margin: 10px 0; padding: 12px; border: 1px solid var(--cc-border); border-radius: 10px; background: var(--cc-panel); }
+.cc-pause-confirm > div { display: flex; gap: 10px; align-items: center; justify-content: space-between; margin: 6px 0; }
+.cc-simple-row.kind-pause { background: var(--review-pause-bg); }
+.cc-simple-row.kind-untranscribed { border-left: 3px solid var(--review-check); }

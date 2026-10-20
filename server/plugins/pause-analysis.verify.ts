@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { analyzePauses } from './pause-analysis';
+import { DEFAULT_PAUSE_SETTINGS } from '../../shared/pause-analysis';
+import { ffmpegBin } from '../media-binaries';
+const exec = promisify(execFile);
+const dir = await mkdtemp(join(tmpdir(), 'cc-audio-pauses-'));
+try {
+  const file = join(dir, 'retake.wav');
+  await exec(ffmpegBin(), ['-v', 'error', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=6:sample_rate=16000', '-af', "volume=0:enable='between(t,1.5,3)+gte(t,5)'", file]);
+  const progress: number[] = [];
+  const result = await analyzePauses(file, DEFAULT_PAUSE_SETTINGS, new AbortController().signal, ms => progress.push(ms));
+  assert.equal(result.quiet.length, 2);
+  assert.ok(Math.abs(result.quiet[0]!.startMs - 1500) < 100);
+  assert.ok(Math.abs(result.quiet[0]!.endMs - 3000) < 100);
+  assert.ok(result.durationMs >= 5990);
+  assert.ok(progress.length > 0);
+  const noQuiet = join(dir, 'continuous.wav');
+  await exec(ffmpegBin(), ['-v', 'error', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=2', noQuiet]);
+  assert.equal((await analyzePauses(noQuiet, DEFAULT_PAUSE_SETTINGS, new AbortController().signal, () => {})).quiet.length, 0);
+  const noisy = join(dir, 'noise.wav');
+  await exec(ffmpegBin(), ['-v', 'error', '-f', 'lavfi', '-i', 'anoisesrc=amplitude=0.2:duration=2:seed=1', noisy]);
+  assert.equal((await analyzePauses(noisy, DEFAULT_PAUSE_SETTINGS, new AbortController().signal, () => {})).quiet.length, 0);
+  const abort = new AbortController(); abort.abort();
+  await assert.rejects(analyzePauses(file, DEFAULT_PAUSE_SETTINGS, abort.signal, () => {}), /cancelada/);
+  const during = new AbortController();
+  await assert.rejects(analyzePauses(file, DEFAULT_PAUSE_SETTINGS, during.signal, () => during.abort()), /cancelada/);
+  await assert.rejects(analyzePauses(join(dir, 'missing.wav'), DEFAULT_PAUSE_SETTINGS, new AbortController().signal, () => {}), /FFmpeg/);
+  console.log('FFmpeg audio analysis: real silence boundaries, terminal pause, continuous audio, noise, progress, cancellation and errors passed');
+} finally { await rm(dir, { recursive: true, force: true }); }

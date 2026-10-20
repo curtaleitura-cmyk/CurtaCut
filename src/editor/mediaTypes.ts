@@ -1,3 +1,4 @@
+import type { PauseAnalysis } from '../../shared/pause-analysis.js';
 import type { TranscriptCarrier } from '../transcript/types.js';
 
 /** An imported media file in the project's media pool. */
@@ -59,6 +60,8 @@ export interface MediaAsset extends TranscriptCarrier {
   /** media-pool organization only; does not affect timeline clips */
   folderId?: string;
   favorite?: boolean;
+  pauseAnalysis?: PauseAnalysis;
+  reviewSplits?: { sourceRevision: string; timesMs: number[] };
   /** Source revision captured when the current transcript was committed. */
   transcriptSourceRevision?: string;
   /** ingest ASR state; undefined = never transcribed (image/no-audio or pre-ingest). */

@@ -24,6 +24,7 @@ export function transcriptReviewHints(
   const phrases = new Set<string>();
   let tail: string[] = [];
   for (const row of rows) {
+    if (row.text === 'Pausa detectada no áudio' || row.text === 'Possível fala não transcrita') { tail = []; continue; }
     const text = normalize(row.text);
     const tokens = text.split(" ");
     const context = [...tail, ...tokens];

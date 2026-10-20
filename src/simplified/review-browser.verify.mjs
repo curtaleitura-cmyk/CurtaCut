@@ -1,5 +1,6 @@
 // Actual browser acceptance check. Every fixture stays in an isolated profile.
 import assert from "node:assert/strict";
+import { verifyOmittedSpeech } from "./audioReview.browser.mjs";
 import { verifyReviewAppearance } from "./reviewAppearance.browser.mjs";
 import { createHash, randomUUID } from "node:crypto";
 import {
@@ -45,6 +46,8 @@ await promisify(execFile)(ffmpeg, [
   "lavfi",
   "-i",
   "sine=frequency=440:sample_rate=48000:duration=18",
+  "-af",
+  "volume=0:enable='between(t,3.5,4.4)+between(t,7.7,8.9)+between(t,16.5,18)'",
   "-c:v",
   "libx264",
   "-preset",
@@ -248,6 +251,7 @@ try {
     () => document.querySelector(".cc-simple-thumbs img")?.complete,
     "filmstrip",
   );
+  await wait(() => !!document.querySelector(".cc-simple-row.kind-pause"), "audio analysis persisted");
   assert.ok(
     await page.evaluate(() =>
       [...document.querySelectorAll(".cc-simple-row .cc-simple-badge")].some(
@@ -268,10 +272,10 @@ try {
     await page.evaluate(
       () =>
         !!document.querySelector(
-          ".cc-simple-pause-row .cc-simple-badge.is-pause",
+          ".cc-simple-row.kind-pause .cc-simple-badge.is-pause",
         ),
     ),
-    "timestamp pause badge",
+    "FFmpeg audio pause badge",
   );
   await click("Cortes sugeridos pela IA");
   await wait(
@@ -287,10 +291,10 @@ try {
   await click("Transcrição");
   await capture("simplified-before-cut.png");
   await page.evaluate(() =>
-    document.querySelectorAll(".cc-simple-row-text")[1].click(),
+    document.querySelectorAll(".cc-simple-row.kind-speech .cc-simple-row-text")[1].click(),
   );
   await new Promise((r) => setTimeout(r, 150));
-  await page.evaluate(() => document.querySelectorAll('.cc-simple-row .cc-review-trash')[1].click());
+  await page.evaluate(() => document.querySelectorAll('.cc-simple-row.kind-speech .cc-review-trash')[1].click());
   await wait(
     () => !!document.querySelector(".cc-simple-row.is-cut"),
     "real cut row",
@@ -308,7 +312,7 @@ try {
   assert.equal(
     saved.timelines[0].items.length,
     2,
-    "real project holds the split video",
+    "real project holds the split video: " + JSON.stringify(saved.timelines[0].items.map(c => [c.startFrame, c.durationInFrames, c.srcInFrame])),
   );
   assert.ok(
     saved.timelines[0].items.reduce((sum, c) => sum + c.durationInFrames, 0) <
@@ -372,7 +376,8 @@ try {
   await click("Desfazer");
   await wait(() => !document.querySelector('.cc-simple-row:not(.is-cut) .cc-review-word.is-cut'), "word deletion undone");
   await click("Excluir todas as pausas");
-  await wait(() => document.querySelector('.cc-remove-pauses').disabled, "all pauses removed");
+  await click("Confirmar exclusão das pausas");
+  await wait(() => !document.querySelector('.cc-remove-pauses'), "all pauses removed");
   await capture("simplified-pauses-removed.png");
   await click("Desfazer");
   await wait(() => !document.querySelector('.cc-remove-pauses').disabled, "bulk pause deletion undone");
@@ -409,11 +414,36 @@ try {
     "BROWSER-QA-OK: actual cut, SRT download, join playback, shared advanced editor, restore, undo and reopen",
   );
   assert.deepEqual(errors, [], "no browser JavaScript errors");
+  const expected = await verifyOmittedSpeech(page, wait, capture);
   await click("Exportar vídeo");
   await wait(
     () => !!document.querySelector('[aria-labelledby="cc-export-title"]'),
     "existing export dialog",
   );
+  await page.evaluate(() => document.querySelector('.cc-export-cta').click());
+  let exported;
+  let localRenderBlocked = false;
+  for (let i = 0; i < 300; i++) {
+    const files = await readdir(downloads);
+    exported = files.find(f => f.endsWith('.mp4'));
+    if (exported) break;
+    const failure = await page.evaluate(() => document.querySelector('.cc-export-error')?.textContent);
+    if (failure) {
+      if (!process.env.CI && failure.includes('uv_interface_addresses')) { localRenderBlocked = true; console.log('EXPORT-BLOCKED-LOCALLY: sandbox denies network interface enumeration; CI must render this fixture.'); break; }
+      throw Error('Export failed: ' + failure);
+    }
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  if (!localRenderBlocked) {
+  assert.ok(exported, 'actual edited MP4 downloaded');
+  const { stdout } = await promisify(execFile)(ffprobe.path, ['-v', 'error', '-show_format', '-show_streams', '-of', 'json', join(downloads, exported)]);
+  const probe = JSON.parse(stdout);
+  assert.ok(probe.streams.some(s => s.codec_type === 'audio'), 'export retains audio');
+  assert.ok(probe.streams.some(s => s.codec_type === 'video'), 'export retains video');
+  assert.ok(Math.abs(Number(probe.format.duration) - expected.durationSeconds) < .15, 'export duration matches real ripple cuts');
+  console.log('AUDIO-EXPORT-QA-OK: edited MP4, audio/video streams and duration');
+  }
+  assert.deepEqual(errors, [], 'no JavaScript errors throughout audio segmentation');
   const after = await readFile(sourcePath);
   assert.equal(
     createHash("sha256").update(after).digest("hex"),

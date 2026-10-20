@@ -2,6 +2,7 @@
 // Models are NOT bundled — users pick and download them on demand through the
 // local hf-proxy (multi-source accelerated download into the disk cache).
 // Whisper is OpenAI's open-source model, so the official OpenAI mark is used.
+import { PauseSettingsPane } from './PauseSettingsPane';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { theme } from '../../theme';
 import { getLocale, useT } from '../../i18n/locale';
@@ -281,6 +282,7 @@ export function LocalAsrPane({ fields, ctx }: { fields: readonly SettingsField[]
           );
         })}
       </div>
+      <PauseSettingsPane />
     </div>
   );
 }

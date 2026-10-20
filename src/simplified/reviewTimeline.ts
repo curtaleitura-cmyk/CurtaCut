@@ -51,7 +51,7 @@ export function reviewTimelineSegments(
     const kind =
       pause && pause.start <= start
         ? "pause"
-        : (hint?.kind ?? (removed ? "cut" : "kept"));
+        : (row?.kind === "untranscribed" ? "check" : hint?.kind ?? (removed ? "cut" : "kept"));
     const previous = segments.at(-1);
     if (
       previous &&

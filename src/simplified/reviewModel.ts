@@ -1,3 +1,6 @@
+import { audioReviewRows } from './audioReviewRows';
+import type { PauseAnalysis, PauseSettings } from '../../shared/pause-analysis';
+import { sourceRevisionOf } from '../editor/mediaSourceRevision';
 import type { MediaAsset, TimelineItem, TimelineState } from "../editor/types";
 import type { AtomicAction } from "../editor/reduce";
 import { timelineItemAssetId } from "../editor/mediaAssetUsage";
@@ -15,6 +18,7 @@ export interface SourceSpan {
 }
 export interface ReviewRow extends SourceSpan {
   id: string;
+  kind?: "speech" | "pause" | "untranscribed";
   wordIndices: number[];
   text: string;
   speechStart: number;
@@ -60,6 +64,7 @@ export function missingSpans(
 export function buildReviewModel(
   state: TimelineState,
   asset: MediaAsset,
+  audio?: { analysis: PauseAnalysis; settings: PauseSettings },
 ): ReviewModel {
   const clips = state.items
     .filter(
@@ -177,7 +182,9 @@ export function buildReviewModel(
       };
     })
     .filter((row) => row.end > row.start);
-  return { state, asset, clips, words, rows, duration, kept, blocker };
+  const audioRows = audio ? audioReviewRows(asset.id, duration, state.fps, words, kept, audio.analysis, audio.settings,
+    asset.reviewSplits?.sourceRevision === sourceRevisionOf(asset) ? asset.reviewSplits.timesMs : []) : rows;
+  return { state, asset, clips, words, rows: audioRows, duration, kept, blocker };
 }
 export function sourceToTimeline(
   model: ReviewModel,

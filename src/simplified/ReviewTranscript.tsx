@@ -1,3 +1,4 @@
+import { PauseReviewTools } from './PauseReviewTools';
 import { Fragment, useMemo } from "react";
 import type { useSimplifiedEditor } from "./useSimplifiedEditor";
 import { reviewTime as clock, type SourceSpan } from "./reviewModel";
@@ -50,7 +51,7 @@ export function ReviewTranscript({
   );
   return (
     <>
-      {!!pauses.length && <button className="cc-remove-pauses" disabled={!!model?.blocker || !pauses.some(p => model?.kept.some(w => w.end > p.start && w.start < p.end))} onClick={editor.removeAllPauses}>Excluir todas as pausas</button>}
+      <PauseReviewTools editor={editor} />
       {!model ? (
         <div className="cc-simple-empty">
           <h2>Comece pelo seu vídeo</h2>
@@ -90,8 +91,7 @@ export function ReviewTranscript({
           )}
           <h3>Pausas entre falas</h3>
           <p>
-            Roxo indica um intervalo sem palavras transcritas, não silêncio
-            confirmado pelo áudio. Ouça antes de decidir.
+            Roxo indica volume abaixo do limite configurado, detectado no áudio pelo FFmpeg. Pode haver fala baixa; ouça antes de decidir.
           </p>
           {pauses.length ? (
             pauses.map((pause, i) => (
@@ -105,7 +105,7 @@ export function ReviewTranscript({
             ))
           ) : (
             <p>
-              Nenhuma pausa de pelo menos um segundo nos tempos disponíveis.
+              Nenhuma pausa elegível com os parâmetros atuais.
             </p>
           )}
         </div>
@@ -126,12 +126,12 @@ export function ReviewTranscript({
           )}
         </div>
       ) : (
-        model.rows.map((row) => (
+        model.rows.filter(row => row.kind !== "pause" || editor.audio.settings.showPauses).map((row) => (
           <Fragment key={row.id}>
             <article
               key={row.id}
               data-row-id={row.id}
-              className={`cc-simple-row ${row.keptFrames === 0 ? "is-cut" : ""} ${selected?.id === row.id ? "is-selected" : ""} ${active?.id === row.id ? "is-playing" : ""}`}
+              className={`cc-simple-row kind-${row.kind ?? "speech"} ${row.keptFrames === 0 ? "is-cut" : ""} ${selected?.id === row.id ? "is-selected" : ""} ${active?.id === row.id ? "is-playing" : ""}`}
             >
               {trash(row, "Excluir trecho")}
               <div className="cc-simple-row-meta">
@@ -145,8 +145,11 @@ export function ReviewTranscript({
                   {clock(row.speechStart / 1000)} –{" "}
                   {clock(row.speechEnd / 1000)}
                 </button>
+                {row.kind === 'pause' && <span className="cc-simple-badge is-pause">Pausa</span>}
+                {row.kind === 'untranscribed' && <span className="cc-simple-badge is-check">Verificar</span>}
+                <span>{((row.end - row.start) / fps).toFixed(2)} s</span>
                 <HintBadge hint={hints.get(row.id)} />
-                {!hints.has(row.id) && row.keptFrames > 0 && <span className="cc-simple-badge is-kept" title="Trecho mantido; não é uma avaliação automática de qualidade">Mantido</span>}
+                {(row.kind === undefined || row.kind === 'speech') && !hints.has(row.id) && row.keptFrames > 0 && <span className="cc-simple-badge is-kept" title="Trecho mantido; não é uma avaliação automática de qualidade">Mantido</span>}
                 <span className="cc-simple-row-status">
                   {row.keptFrames === 0
                     ? "Removido"
@@ -156,6 +159,7 @@ export function ReviewTranscript({
                 </span>
               </div>
               <div className="cc-simple-row-text" aria-label="Palavras do trecho" onClick={() => select(row)}>
+                {!row.wordIndices.length && <span>{row.text}</span>}
                 {row.wordIndices.map(i => {
                   const word = model.words[i]!;
                   const span = { start: Math.floor(word.start * fps / 1000), end: Math.ceil(word.end * fps / 1000) };
@@ -176,7 +180,7 @@ export function ReviewTranscript({
                 >
                   {row.keptFrames === 0 ? "Desfazer última alteração" : "Marcar corte"}
                 </button>
-                <details
+                {!!row.wordIndices.length && <details
                   onToggle={(event) => {
                     if (event.currentTarget.open) setEditingRow(row.id);
                   }}
@@ -197,30 +201,10 @@ export function ReviewTranscript({
                         />
                       ))}
                   </div>
-                </details>
+                </details>}
               </div>
             </article>
-            {pauses
-              .filter(
-                (pause) => pause.start >= row.start && pause.start < row.end,
-              )
-              .map((pause, i) => (
-                <div key={i} className="cc-simple-pause-row">
-                  {trash(pause, "Excluir pausa")}
-                  <button
-                    onClick={() => sourceSeek(pause.start, true, pause.end)}
-                    aria-label={`Reproduzir pausa em ${clock(pause.start / fps)}`}
-                  >
-                    ▶ {clock(pause.start / fps)} – {clock(pause.end / fps)}
-                    <span className="cc-simple-badge is-pause">Pausa</span>
-                    <span>
-                      Intervalo de{" "}
-                      {((pause.end - pause.start) / fps).toFixed(1)}s sem
-                      palavras transcritas
-                    </span>
-                  </button>
-                </div>
-              ))}
+
           </Fragment>
         ))
       )}

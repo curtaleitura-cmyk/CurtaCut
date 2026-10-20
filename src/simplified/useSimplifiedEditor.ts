@@ -1,3 +1,5 @@
+import { usePauseAnalysis } from './usePauseAnalysis';
+import { sourceRevisionOf } from '../editor/mediaSourceRevision';
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CallbackListener } from "@remotion/player";
 import type { EditorWorkspaceViewProps } from "../editor/EditorWorkspaceView";
@@ -44,12 +46,13 @@ export function useSimplifiedEditor({
   useEffect(() => {
     if (asset) { try { sessionStorage.setItem(`cc.reviewAsset:${location.hash}`, asset.id); } catch { /* preference */ } }
   }, [asset]);
+  const audio = usePauseAnalysis(asset, state.fps, topBar.projectId, commands?.batch);
   const model = useMemo(
     () =>
       asset
-        ? buildReviewModel({ ...state, assets: library.assets }, asset)
+        ? buildReviewModel({ ...state, assets: library.assets }, asset, audio.analysis ? { analysis: audio.analysis, settings: audio.settings } : undefined)
         : null,
-    [asset, state, library.assets],
+    [asset, state, library.assets, audio.analysis, audio.settings],
   );
   const [selectedId, setSelectedId] = useState("");
   const selected =
@@ -132,7 +135,8 @@ export function useSimplifiedEditor({
   }
   function sourceSeek(frame: number, play = false, end?: number) {
     const timeline = model ? sourceToTimeline(model, frame) : null;
-    if (timeline !== null) {
+    const fullyKept = end === undefined || !!model?.kept.some(w => w.start <= frame && w.end >= end);
+    if (timeline !== null && fullyKept) {
       editedSeek(
         timeline,
         play,
@@ -188,13 +192,13 @@ export function useSimplifiedEditor({
       setNotice(error instanceof Error ? error.message : String(error));
     }
   }
-  function removeAllPauses() {
+  function removeAllPauses(chosen: SourceSpan[] = pauses) {
     if (!commands || !model) return;
     try {
       playerRef.current?.pause();
       original.current?.pause();
       stopAt.current = null;
-      commands.batch(planReviewCut(model, pauses, makeId), "Excluir todas as pausas");
+      commands.batch(planReviewCut(model, chosen, makeId), "Excluir todas as pausas");
       setNotice("Pausas removidas de vídeo, áudio e legendas, sem espaços. Use Desfazer para recuperar.");
     } catch (error) { setNotice(error instanceof Error ? error.message : String(error)); }
   }
@@ -281,17 +285,23 @@ export function useSimplifiedEditor({
   const keptFrames =
     model?.kept.reduce((total, span) => total + span.end - span.start, 0) ?? 0;
   const removedFrames = Math.max(0, (model?.duration ?? 0) - keptFrames);
-  const pauses = useMemo(() =>
-    model?.words.flatMap((word, i) =>
-      i > 0 && word.start - model.words[i - 1]!.end >= 1000
-        ? [
-            {
-              start: Math.round((model.words[i - 1]!.end * fps) / 1000),
-              end: Math.round((word.start * fps) / 1000),
-            },
-          ]
-        : [],
-    ) ?? [], [model, fps]);
+  const pauses = useMemo(() => audio.analysis
+    ? model?.rows.filter(row => row.kind === 'pause') ?? [] : [], [model, audio.analysis]);
+  function splitAtPlayhead() {
+    if (!asset || !commands || !model || !audio.analysis) return;
+    const frame = Math.round(sourceMode ? (original.current?.currentTime ?? sourceFrame / fps) * fps
+      : timelineToSource(model, playerRef.current?.getCurrentFrame() ?? 0) ?? sourceFrame);
+    const row = model.rows.find(r => frame > r.start && frame < r.end);
+    if (!row) { setNotice('Posicione a reprodução dentro de um bloco para dividi-lo.'); return; }
+    const ms = frame * 1000 / fps;
+    if (model.words.some(w => w.start < ms && w.end > ms)) { setNotice('Escolha um ponto entre palavras para preservar os tempos da legenda.'); return; }
+    const revision = sourceRevisionOf(asset);
+    const old = asset.reviewSplits?.sourceRevision === revision ? asset.reviewSplits.timesMs : [];
+    commands.batch([{ type: 'pool.updateAsset', id: asset.id, patch: { reviewSplits: {
+      sourceRevision: revision, timesMs: [...new Set([...old, ms])].sort((a, b) => a - b),
+    } } }], 'Dividir bloco de revisão');
+    setNotice('Bloco dividido. Nenhum áudio ou vídeo foi removido.');
+  }
   const finalText = useMemo(
     () => (model ? reviewFinalText(model, fps) : ""),
     [model, fps],
@@ -301,6 +311,8 @@ export function useSimplifiedEditor({
   const index = model?.rows.findIndex((row) => row.id === selected?.id) ?? -1;
   return {
     commands,
+    audio,
+    splitAtPlayhead,
     preview,
     library,
     topBar,

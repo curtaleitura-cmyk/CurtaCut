@@ -1,4 +1,4 @@
-# Modo de Edição Simplificada — prévia 0.2.26
+# Modo de Edição Simplificada — prévia 0.2.27
 
 No computador, abra um projeto e use **Edição simplificada** na barra superior. Importe um vídeo e clique em **Transcrever** quando precisar gerar a transcrição. O modo usa as palavras e os tempos reais produzidos pelo provedor configurado, inclusive Whisper local.
 
@@ -28,7 +28,7 @@ Os selos aparecem ao lado dos horários, seguindo a paleta da referência: amare
 
 **Verificar** indica expressões de incerteza (como “se não me engano”) ou blocos inteiros de pelo menos cinco palavras repetidos. **Provável erro** indica expressões de retomada (como “falei errado” e “vou começar de novo”). São regras aplicadas ao texto real, não um parecer de IA. O motivo aparece ao passar o cursor no selo e também na aba de sugestões. A correção do texto recalcula os indícios. Falas literárias, citações e repetições intencionais podem receber indicação: sempre confira o contexto. Nenhum selo aplica um corte.
 
-A análise contextual por IA ainda não está conectada. As pausas listadas são lacunas de pelo menos um segundo nos timestamps da transcrição, não uma confirmação de silêncio pelo áudio. Cada pausa aparece também na transcrição e pode ser ouvida.
+A análise contextual por IA ainda não está conectada. Desde 0.2.27, as pausas são medidas no áudio por FFmpeg, com margem de proteção e revisão antes da exclusão em lote. Volume baixo não garante ausência de fala. [Segmentação por áudio](audio-segmentation.md).
 
 Velocidade alterada, edição de áudio por palavras, repetição/reordenação do mesmo arquivo, múltiplas faixas do mesmo vídeo, faixas bloqueadas, transições, grupos vinculados e multicâmera exigem o editor avançado. O modo mostra a limitação antes de permitir alterações incompatíveis. O layout inicial é destinado a monitores desktop.
 
@@ -51,7 +51,7 @@ Velocidade alterada, edição de áudio por palavras, repetição/reordenação 
 
 O modo simplificado é o padrão quando ainda não há uma escolha de modo salva. A escolha explícita do editor avançado continua sendo lembrada.
 
-A lixeira aparece ao passar o mouse ou navegar pelo teclado sobre trechos, sugestões e pausas; em telas de toque, fica visível. Excluir remove o intervalo de todas as faixas e desloca o restante, incluindo áudio separado e legendas manuais ou vinculadas. “Excluir todas as pausas” aplica as lacunas indicadas em uma única operação. Pausas são intervalos sem palavras transcritas de pelo menos um segundo, não detecção de silêncio acústico.
+A lixeira aparece ao passar o mouse ou navegar pelo teclado sobre trechos, sugestões e pausas; em telas de toque, fica visível. Excluir remove o intervalo de todas as faixas e desloca o restante, incluindo áudio separado e legendas manuais ou vinculadas. Desde 0.2.27, “Excluir todas as pausas” abre a revisão dos intervalos de volume baixo detectados no áudio e aplica os selecionados em uma única operação.
 
 Use **Desfazer** para recuperar a última operação inteira, com todas as faixas sincronizadas. A antiga restauração isolada de trecho foi substituída por esse comando para evitar recuperar somente o vídeo. O histórico de desfazer vale durante a sessão; os cortes são salvos no projeto, sem modificar o arquivo original. Faixas bloqueadas impedem a operação.
 
@@ -61,6 +61,6 @@ Os textos do painel do assistente, fluxos iniciais, abas de mídia, estilos de l
 
 Clique no horário para ouvir um trecho; clique diretamente numa palavra para excluir seu intervalo real de vídeo, áudio e legenda. Use Desfazer para recuperar a operação inteira. A escolha do vídeo sobrevive à alternância entre modos; configurações vazias de edição não bloqueiam cortes.
 
-A comparação de repetições procura sequências de pelo menos cinco palavras, inclusive entre blocos. Amarelo sinaliza possíveis erros/repetições a revisar. Verde significa Mantido, não uma classificação automática de melhores trechos: ainda não há análise contextual por IA.
+A comparação de repetições procura sequências de pelo menos cinco palavras, inclusive entre blocos. Amarelo sinaliza possíveis erros/repetições a revisar. Azul suave significa Mantido na versão 0.2.27, não uma classificação automática de melhores trechos: ainda não há análise contextual por IA.
 
 O painel de atividade informa motor, dispositivo selecionado, modelo, tempo e motivos de retorno automático. No Windows, o whisper.cpp incluído usa CPU; não há CUDA nativo incluído nesta versão. A opção WebGPU agora tem prioridade sobre o motor nativo e solicita o adaptador de alto desempenho. Tiny, Base e Small possuem os arquivos necessários; modelos maiores continuam sem variantes WebGPU no catálogo. Falhas de carregamento/inferência e resultados vazios retornam a CPU com aviso. Requer arquivos ONNX instalados; a velocidade e compatibilidade na GPU do usuário não foram medidas neste ambiente.

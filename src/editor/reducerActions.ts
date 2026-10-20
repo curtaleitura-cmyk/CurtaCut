@@ -124,7 +124,7 @@ export type ProjectAction =
   | { type: 'pool.renameFolder'; id: string; name: string }
   | { type: 'pool.deleteFolder'; id: string }
   | { type: 'pool.moveAssets'; ids: string[]; folderId?: string }
-  | { type: 'pool.updateAsset'; id: string; patch: Partial<Pick<MediaAsset, 'name' | 'favorite' | 'code' | 'props' | 'sourceTimecode' | 'captureClock'>> }
+  | { type: 'pool.updateAsset'; id: string; patch: Partial<Pick<MediaAsset, 'name' | 'favorite' | 'code' | 'props' | 'sourceTimecode' | 'captureClock' | 'pauseAnalysis' | 'reviewSplits'>> }
   | { type: 'pool.fixTranscriptWord'; id: string; wordIndex: number; text: string }
   | { type: 'pool.setTranscription'; id: string; patch: Partial<Pick<MediaAsset, 'transcript' | 'transcriptSourceRevision' | 'transcriptStale' | 'transcribeStatus' | 'transcribeError'>> }
   | ({ type: 'pool.relinkAsset'; id: string } & MediaAssetRelinkPatch)
