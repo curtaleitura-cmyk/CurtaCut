@@ -30,11 +30,20 @@ export function useSimplifiedEditor({
   } = workspace;
   const state = preview.reviewState;
   const assets = library.assets.filter((asset) => asset.kind === "video");
-  const [assetId, setAssetId] = useState("");
+  const [assetId, setAssetIdState] = useState(() => {
+    try { return sessionStorage.getItem(`cc.reviewAsset:${location.hash}`) ?? ""; } catch { return ""; }
+  });
+  const setAssetId = (id: string) => {
+    setAssetIdState(id);
+    try { sessionStorage.setItem(`cc.reviewAsset:${location.hash}`, id); } catch { /* optional preference */ }
+  };
   const asset =
     assets.find((a) => a.id === assetId) ??
     assets.find((a) => state.items.some((c) => c.sourceAssetId === a.id)) ??
     assets[0];
+  useEffect(() => {
+    if (asset) { try { sessionStorage.setItem(`cc.reviewAsset:${location.hash}`, asset.id); } catch { /* preference */ } }
+  }, [asset]);
   const model = useMemo(
     () =>
       asset

@@ -146,6 +146,7 @@ export function ReviewTranscript({
                   {clock(row.speechEnd / 1000)}
                 </button>
                 <HintBadge hint={hints.get(row.id)} />
+                {!hints.has(row.id) && row.keptFrames > 0 && <span className="cc-simple-badge is-kept" title="Trecho mantido; não é uma avaliação automática de qualidade">Mantido</span>}
                 <span className="cc-simple-row-status">
                   {row.keptFrames === 0
                     ? "Removido"
@@ -154,12 +155,17 @@ export function ReviewTranscript({
                       : "Mantido"}
                 </span>
               </div>
-              <button
-                className="cc-simple-row-text"
-                onClick={() => select(row)}
-              >
-                {row.text}
-              </button>
+              <div className="cc-simple-row-text" aria-label="Palavras do trecho" onClick={() => select(row)}>
+                {row.wordIndices.map(i => {
+                  const word = model.words[i]!;
+                  const span = { start: Math.floor(word.start * fps / 1000), end: Math.ceil(word.end * fps / 1000) };
+                  const kept = model.kept.some(w => w.end > span.start && w.start < span.end);
+                  return <Fragment key={i}><button className={`cc-review-word ${kept ? '' : 'is-cut'}`}
+                    disabled={!kept || !!model.blocker || span.end <= span.start}
+                    aria-label={`Excluir palavra: ${word.text}`} title={`Excluir “${word.text}” do vídeo, áudio e legenda`}
+                    onClick={(event) => { event.stopPropagation(); setSelectedId(row.id); changeCut(false, span); }}>{word.text.trim()}</button>{' '}</Fragment>;
+                })}
+              </div>
               <div className="cc-simple-row-actions">
                 <button
                   disabled={row.keptFrames === 0 ? !editor.topBar.canUndo : !!model.blocker}

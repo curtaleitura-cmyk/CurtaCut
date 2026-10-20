@@ -1,4 +1,10 @@
 export default {
+  'Engine: {engine}': 'Motor: {engine}',
+  'Device: {device}': 'Dispositivo: {device}',
+  'Fallback: {reason}': 'Retorno automático: {reason}',
+  'Native transcription on Windows uses CPU. Enable WebGPU to try GPU with Tiny, Base or Small. This requires the browser model files.': 'A transcrição nativa no Windows usa CPU. Ative WebGPU para tentar a GPU com Tiny, Base ou Small. É necessário baixar os arquivos do modelo para esse motor.',
+  'WebGPU takes priority for supported models. Failures switch to CPU and appear in transcription activity.': 'WebGPU tem prioridade nos modelos compatíveis. Falhas provocam retorno à CPU e aparecem na atividade de transcrição.',
+
   'Speaker': 'Falante',
   'Comments': 'Comentários',
   'Review comments': 'Comentários de revisão',

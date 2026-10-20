@@ -367,6 +367,10 @@ try {
     "redo synchronized cut",
   );
 
+  await page.evaluate(() => document.querySelector('.cc-simple-row:not(.is-cut) .cc-review-word:not(:disabled)').click());
+  await wait(() => !!document.querySelector('.cc-simple-row:not(.is-cut) .cc-review-word.is-cut'), "word cut after advanced round trip");
+  await click("Desfazer");
+  await wait(() => !document.querySelector('.cc-simple-row:not(.is-cut) .cc-review-word.is-cut'), "word deletion undone");
   await click("Excluir todas as pausas");
   await wait(() => document.querySelector('.cc-remove-pauses').disabled, "all pauses removed");
   await capture("simplified-pauses-removed.png");

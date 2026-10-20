@@ -69,3 +69,10 @@
 @media (hover: none) { .cc-simple .cc-review-trash { opacity: 1; } }
 
 .cc-simple .cc-simple-row { padding-right: 48px; }
+
+.cc-simple-badge.is-kept { background: var(--review-kept); }
+.cc-simple .cc-review-word { background: transparent; color: inherit; border: 0; padding: 2px 1px; font: inherit; border-radius: 4px; }
+.cc-simple .cc-review-word:hover:not(:disabled), .cc-simple .cc-review-word:focus-visible { background: var(--review-cut); color: #141a22; text-decoration: line-through; }
+.cc-simple .cc-review-word.is-cut { opacity: .45; text-decoration: line-through; }
+.cc-simple-badge.is-error { background: var(--review-check); }
+.cc-simple .cc-simple-ruler .error, .cc-simple .cc-simple-legend .error { background: var(--review-check); }

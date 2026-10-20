@@ -117,8 +117,8 @@ export function buildReviewModel(
         (c.playbackRate ?? 1) !== 1 ||
         c.deletedWordIdx?.length ||
         c.transcriptPlayOrder?.length ||
-        c.gapCapsMs ||
-        c.silenceFrames !== undefined,
+        Object.keys(c.gapCapsMs ?? {}).length > 0 ||
+        c.silenceFrames != null,
     )
   )
     blocker =

@@ -1,4 +1,4 @@
-# Modo de Edição Simplificada — prévia 0.2.25
+# Modo de Edição Simplificada — prévia 0.2.26
 
 No computador, abra um projeto e use **Edição simplificada** na barra superior. Importe um vídeo e clique em **Transcrever** quando precisar gerar a transcrição. O modo usa as palavras e os tempos reais produzidos pelo provedor configurado, inclusive Whisper local.
 
@@ -47,7 +47,7 @@ Velocidade alterada, edição de áudio por palavras, repetição/reordenação 
 
 ![Mesmo projeto em modo claro](screenshots/simplified-light.png)
 
-## Exclusão sincronizada — 0.2.25
+## Exclusão sincronizada — 0.2.26
 
 O modo simplificado é o padrão quando ainda não há uma escolha de modo salva. A escolha explícita do editor avançado continua sendo lembrada.
 
@@ -56,3 +56,11 @@ A lixeira aparece ao passar o mouse ou navegar pelo teclado sobre trechos, suges
 Use **Desfazer** para recuperar a última operação inteira, com todas as faixas sincronizadas. A antiga restauração isolada de trecho foi substituída por esse comando para evitar recuperar somente o vídeo. O histórico de desfazer vale durante a sessão; os cortes são salvos no projeto, sem modificar o arquivo original. Faixas bloqueadas impedem a operação.
 
 Os textos do painel do assistente, fluxos iniciais, abas de mídia, estilos de legenda, pausas e identificação padrão de falantes foram traduzidos para português. Nomes e conteúdos escritos pelo usuário são preservados.
+
+## Palavras e diagnóstico de transcrição — 0.2.26
+
+Clique no horário para ouvir um trecho; clique diretamente numa palavra para excluir seu intervalo real de vídeo, áudio e legenda. Use Desfazer para recuperar a operação inteira. A escolha do vídeo sobrevive à alternância entre modos; configurações vazias de edição não bloqueiam cortes.
+
+A comparação de repetições procura sequências de pelo menos cinco palavras, inclusive entre blocos. Amarelo sinaliza possíveis erros/repetições a revisar. Verde significa Mantido, não uma classificação automática de melhores trechos: ainda não há análise contextual por IA.
+
+O painel de atividade informa motor, dispositivo selecionado, modelo, tempo e motivos de retorno automático. No Windows, o whisper.cpp incluído usa CPU; não há CUDA nativo incluído nesta versão. A opção WebGPU agora tem prioridade sobre o motor nativo e solicita o adaptador de alto desempenho. Tiny, Base e Small possuem os arquivos necessários; modelos maiores continuam sem variantes WebGPU no catálogo. Falhas de carregamento/inferência e resultados vazios retornam a CPU com aviso. Requer arquivos ONNX instalados; a velocidade e compatibilidade na GPU do usuário não foram medidas neste ambiente.

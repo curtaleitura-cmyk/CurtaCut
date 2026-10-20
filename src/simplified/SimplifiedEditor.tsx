@@ -170,7 +170,7 @@ export function SimplifiedEditor(props: SimplifiedEditorProps) {
             </button>
           )}
           <p className="cc-simple-hint">
-            Clique em uma frase para navegar. O original é preservado.
+            Clique no horário para ouvir ou numa palavra para excluí-la. O original é preservado.
             Use Desfazer para recuperar a última alteração.
           </p>
           {model && model.clips.length === 0 && (

@@ -1,7 +1,7 @@
 {
   "name": "openchatcut",
   "private": true,
-  "version": "0.2.25",
+  "version": "0.2.26",
   "description": "CurtaCut: editor de vídeo baseado no OpenChatCut, com Whisper local e Português (Brasil) por padrão.",
   "license": "AGPL-3.0-or-later",
   "author": "OpenChatCut Contributors",

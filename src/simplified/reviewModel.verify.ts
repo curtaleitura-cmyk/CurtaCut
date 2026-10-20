@@ -263,3 +263,11 @@ const syncActions = planReviewCut(buildReviewModel(synced, asset), [{ start: 45,
 const cutHistory = historyReduce(syncHistory, { type: 'batch', actions: syncActions });
 assert.equal(cutHistory.past.length, 1, 'bulk cut is one history entry');
 assert.deepEqual(historyReduce(cutHistory, { type: 'undo' }).present, syncDoc, 'undo restores video, audio and caption state together');
+
+assert.equal(buildReviewModel({ ...synced, items: [{ ...clip, gapCapsMs: {}, deletedWordIdx: [], transcriptPlayOrder: [] }] }, asset).blocker, null, 'empty edit settings do not lock simplified mode');
+const wordCut = rippleReviewRanges(synced, [{ start: 60, end: 81 }], id);
+assert.equal(wordCut.items.filter(i => i.track === 'V1').reduce((n, i) => n + i.durationInFrames, 0), 159);
+assert.equal(wordCut.items.filter(i => i.track === 'A1').reduce((n, i) => n + i.durationInFrames, 0), 159);
+assert.ok(!resolveCaptionWords(wordCut.tracks!.C1!.captions!, wordCut.items, 30).some(w => w.text === 'Este'));
+const partialRepeats = transcriptReviewHints([{ id: 'a', text: 'Hoje eu quero falar sobre este livro maravilhoso.' }, { id: 'b', text: 'Então hoje eu quero falar sobre este livro que terminei.' }]);
+assert.equal(partialRepeats.get('b')?.label, 'Possível repetição');

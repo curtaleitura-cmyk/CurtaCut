@@ -101,6 +101,13 @@ try {
   assert.equal(ggmlOnly.text, 'desktop transcript', 'the installed desktop model must not wait for the browser download');
   assert.deepEqual([nativeRequests, decodedSources], [1, 0]);
 
+  installed(true, true);
+  stored.set('cc.asrBackend', 'webgpu');
+  const explicitGpu = await transcribe();
+  assert.equal(nativeRequests, 1, 'explicit WebGPU must not silently run native CPU first');
+  assert.ok(reachedBrowserDecode(explicitGpu));
+  stored.delete('cc.asrBackend');
+
   // Desktop with only the ONNX export (small/medium installed before they had a
   // companion): whisper.cpp is skipped and the browser engine runs.
   installed(true, false);
@@ -113,14 +120,14 @@ try {
   desktopShell(false);
   installed(true, false);
   assert.ok(reachedBrowserDecode(await transcribe()), 'a browser install never needs the companion');
-  assert.equal(decodedSources, 2);
+  assert.equal(decodedSources, 3);
   // ...and without it the run stops before any decoding, pointing at settings.
   installed(false, true);
   const browserMissing = detailOf(await transcribe());
   assert.match(browserMissing, /Whisper Small/);
   assert.match(browserMissing, /ONNX/);
   assert.match(browserMissing, SETTINGS_PAGE);
-  assert.equal(decodedSources, 2, 'a missing ONNX export is refused before the engine starts');
+  assert.equal(decodedSources, 3, 'a missing ONNX export is refused before the engine starts');
 
   // Desktop engine fails and the fallback lacks its files: say both.
   desktopShell(true);
@@ -139,7 +146,7 @@ try {
   assert.equal(nativeRequests, 2);
   assert.match(neither, /GGML/);
   assert.match(neither, /ONNX/);
-  assert.equal(decodedSources, 2);
+  assert.equal(decodedSources, 3);
 
   // Unknown readiness (tier not listed) blocks nothing up front.
   catalogRows = [];

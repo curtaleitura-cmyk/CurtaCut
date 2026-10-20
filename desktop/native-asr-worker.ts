@@ -265,6 +265,7 @@ async function transcribeWithEngine(
         json = JSON.parse(await readFile(jsonPath, 'utf8')) as WhisperJson;
       } catch (gpuError) {
         if (engine.backend === 'native-cpu') throw gpuError;
+        port!.postMessage({ type: 'progress', progress: { requestId: request.requestId, file: '@fallback-cpu' } });
         const { jsonPath } = await runWhisperCli(
           engine.ggmlPath, wavPath, whisperLanguage(request.language), false, signal, progress,
         );
