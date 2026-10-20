@@ -18,6 +18,22 @@ O CurtaCut é uma versão independente mantida por `curtaleitura-cmyk`. Reutiliz
 A instalação pelo `.exe` dispensa Git, Node.js e os comandos abaixo. O pacote inclui `SHA256SUMS.txt`. É um instalador experimental; ainda não há release estável assinada. Esse download do GitHub Actions expira em **16/11/2026**. [Ver execução e testes](https://github.com/curtaleitura-cmyk/CurtaCut/actions/runs/39042654924).
 
 
+## Edição simplificada (prévia 0.2.27)
+
+A barra superior agora permite alternar entre **Edição simplificada** e **Edição avançada** no mesmo projeto. O novo modo reúne vídeo, transcrição clicável, lixeira por trecho, remoção de todas as pausas, correção de palavras, prévia das junções, miniaturas, texto final, estatísticas e legendas SRT. O modo simplificado é o padrão para quem ainda não escolheu outro modo. Os cortes removem vídeo, áudio e legendas e fecham os espaços em todas as faixas, com desfazer/refazer e salvamento automático.
+
+Selos **Verificar**, **Provável erro** e **Pausa** aparecem junto aos horários e usam as mesmas cores na timeline. Painéis têm cantos levemente arredondados. O seletor **Claro/Escuro**, na barra superior, vale para os dois editores e a tela de projetos; a preferência fica salva. As indicações usam regras de texto (incerteza, retomadas e blocos repetidos) e análise do áudio com FFmpeg para pausas; **a análise contextual por IA ainda não está conectada**. Confira os motivos e ouça antes de cortar. Projetos com velocidade alterada, transições ou montagens complexas devem ser editados no modo avançado. [Funcionamento, limites e testes](docs/simplified-editor.md).
+
+O download acima corresponde à versão 0.2.21; a prévia 0.2.27 é gerada no Pull Request desta implementação.
+
+## Segmentação por áudio (0.2.27)
+
+No editor simplificado, o FFmpeg analisa o áudio local uma vez e separa falas e pausas, independentemente das palavras reconhecidas pelo Whisper. Se uma região não tiver texto, aparece **Possível fala não transcrita**: ouça e decida se deseja mantê-la. O Tiny continua sendo uma opção para testar sem mudar o motor de transcrição.
+
+Abra **Detecção de pausas e silêncios** na transcrição ou nas configurações de modelos locais. Os valores iniciais são 500 ms, −35 dB e 150 ms de proteção. Ajustar sensibilidade ou duração refaz somente a análise de áudio; alterar a margem reutiliza o resultado salvo. Há progresso e cancelamento. A análise não inicia uma transcrição ao importar em Minhas mídias.
+
+**Excluir todas as pausas** abre uma revisão com quantidade, duração e reprodução dos intervalos; confirme os que deseja remover. Não há exclusão automática, pois fala baixa e pausas expressivas precisam de avaliação. **Dividir no ponto da reprodução** separa um bloco entre palavras sem cortar o vídeo. Cortes usam o histórico compartilhado. [Detalhes e limites](docs/audio-segmentation.md).
+
 ## Melhorias de uso (0.2.21)
 
 - Importar em **Minhas mídias** ou arrastar para a timeline deixa de iniciar transcrição por padrão. Use **Transcrever** no cartão da mídia ou na aba de transcrição. A opção automática continua disponível em Configurações; escolhas anteriores explícitas são respeitadas.

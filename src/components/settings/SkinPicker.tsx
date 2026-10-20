@@ -1,17 +1,17 @@
 // Skin selector: brush button + drop-down card, row = three-color point (bottom/panel/accent)
 // Preview + name + check mark. The switch takes effect immediately (applySkin changes to <html data-cc-skin>),
 // localStorage is persistent; TopBar is shared with Dashboard header.
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { theme, themeAlpha } from '../../theme';
 import { useT } from '../../i18n/locale';
-import { SKINS, applySkin, getSkin } from '../../skins';
+import { SKINS, applySkin, getSkin, subscribeSkin } from '../../skins';
 import { Icon } from '../icons';
 
 export function SkinPicker() {
   const t = useT();
   const [open, setOpen] = useState(false);
-  const [current, setCurrent] = useState(getSkin);
-  const pick = (id: string): void => { applySkin(id); setCurrent(id); };
+  const current = useSyncExternalStore(subscribeSkin, getSkin, () => 'graphite');
+  const pick = (id: string): void => { applySkin(id); };
 
   return (
     <div style={{ position: 'relative', display: 'inline-flex' }}>

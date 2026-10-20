@@ -2,6 +2,7 @@
 // Models are NOT bundled — users pick and download them on demand through the
 // local hf-proxy (multi-source accelerated download into the disk cache).
 // Whisper is OpenAI's open-source model, so the official OpenAI mark is used.
+import { PauseSettingsPane } from './PauseSettingsPane';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { theme } from '../../theme';
 import { getLocale, useT } from '../../i18n/locale';
@@ -84,7 +85,7 @@ export function LocalAsrPane({ fields, ctx }: { fields: readonly SettingsField[]
   }, []);
   // "Downloaded" means ready for the engine this client runs first: whisper.cpp
   // needs only the GGML companion, the browser engine only the ONNX export.
-  const engine: LocalAsrEngine = nativeInference && nativeAsrAvailable ? 'native' : 'browser';
+  const engine: LocalAsrEngine = nativeInference && nativeAsrAvailable && !webgpuAccel ? 'native' : 'browser';
   const toggleNativeInference = useCallback((enabled: boolean) => {
     void setDesktopNativeInferenceEnabled(enabled)
       .then(() => setNativeInference(enabled))
@@ -196,6 +197,7 @@ export function LocalAsrPane({ fields, ctx }: { fields: readonly SettingsField[]
           />
           <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <span style={{ fontSize: 12, fontWeight: 600 }}>{t('桌面原生推理加速')}</span>
+            <span style={{ fontSize: 11, color: theme.textDim }}>{t('Native transcription on Windows uses CPU. Enable WebGPU to try GPU with Tiny, Base or Small. This requires the browser model files.')}</span>
             <span style={{ fontSize: 11, color: theme.textDim, lineHeight: 1.45 }}>
               {t('启用后，转写使用 macOS Metal 或原生 CPU；画面语义、节拍与音乐语义模型自动选择 Windows DirectML、Linux CUDA、macOS CoreML 或浏览器 WebGPU；失败时回退 CPU 或浏览器引擎。')}
             </span>
@@ -214,6 +216,7 @@ export function LocalAsrPane({ fields, ctx }: { fields: readonly SettingsField[]
         />
         <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           <span style={{ fontSize: 12, fontWeight: 600 }}>{t('WebGPU 转写加速')}</span>
+          <span style={{ fontSize: 11, color: theme.textDim }}>{t('WebGPU takes priority for supported models. Failures switch to CPU and appear in transcription activity.')}</span>
         </span>
       </label>
       <label style={{
@@ -279,6 +282,7 @@ export function LocalAsrPane({ fields, ctx }: { fields: readonly SettingsField[]
           );
         })}
       </div>
+      <PauseSettingsPane />
     </div>
   );
 }

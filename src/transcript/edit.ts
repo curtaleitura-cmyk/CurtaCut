@@ -314,11 +314,14 @@ export function splitClipTranscript(
   clip: ClipTranscriptState,
   fps: number,
   cutFrames: number,
+  sourceTime = false,
 ): { k: number; left: ClipTranscriptState; right: ClipTranscriptState } | null {
   const words = clip.transcript;
   if (!words?.length) return null;
   const deleted = new Set(clip.deletedWordIdx ?? []);
-  const k = sourceSplitIndex(words, deleted, fps, cutFrames, { maxGapFrames: clip.silenceFrames, gapCapsMs: clip.gapCapsMs });
+  const sourceIndex = sourceTime ? words.findIndex(word => msToFrame(word.start, fps) >= cutFrames) : -1;
+  const k = sourceTime ? (sourceIndex < 0 ? words.length : sourceIndex)
+    : sourceSplitIndex(words, deleted, fps, cutFrames, { maxGapFrames: clip.silenceFrames, gapCapsMs: clip.gapCapsMs });
 
   const del = clip.deletedWordIdx ?? [];
   const leftCaps: Record<string, number> = {};

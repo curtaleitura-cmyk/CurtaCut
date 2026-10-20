@@ -100,3 +100,10 @@ const stateOf = (it: TimelineItem): TimelineState => ({ fps, width: 1920, height
 }
 
 console.log('split.check: OK');
+
+// Repeated video cuts use absolute media timestamps, not the audio kept-stream offset.
+{
+  const first = reduce(stateOf(item({ transcript: W })), { type: 'split', id: 'v1', atFrame: 30, newId: 'r1' });
+  const second = reduce(first, { type: 'split', id: 'r1', atFrame: 60, newId: 'r2' });
+  assert.deepEqual(second.items.find(clip => clip.id === 'r2')!.transcript!.map(word => word.text), ['c', 'd']);
+}

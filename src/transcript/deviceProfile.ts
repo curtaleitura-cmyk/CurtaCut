@@ -22,11 +22,11 @@ function deviceMemoryGB(): number {
 
 async function webgpuCapability(): Promise<{ available: boolean; vendor?: string; backend?: string }> {
   const gpu = typeof navigator !== 'undefined'
-    ? (navigator as { gpu?: { requestAdapter?: () => Promise<unknown> } }).gpu
+    ? (navigator as { gpu?: { requestAdapter?: (options?: { powerPreference: 'high-performance' }) => Promise<unknown> } }).gpu
     : undefined;
   if (!gpu?.requestAdapter) return { available: false };
   try {
-    const adapter = await gpu.requestAdapter() as { info?: { vendor?: string; architecture?: string; description?: string; backend?: string } } | null;
+    const adapter = await gpu.requestAdapter({ powerPreference: 'high-performance' }) as { info?: { vendor?: string; architecture?: string; description?: string; backend?: string } } | null;
     if (!adapter) return { available: false };
     return {
       available: true,

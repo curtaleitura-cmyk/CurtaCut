@@ -1,6 +1,6 @@
 /** Live activity shared by manual, ingest and agent transcription entry points. */
 export type TranscriptionStage = 'queued' | 'preparing' | 'loading' | 'transcribing' | 'finalizing';
-export interface TranscriptionProgress { stage: TranscriptionStage; percent?: number; model?: string }
+export interface TranscriptionProgress { stage: TranscriptionStage; percent?: number; model?: string; engine?: string; device?: string; fallback?: string }
 export interface TranscriptionActivity extends TranscriptionProgress {
   id: string; source: string; provider: string; language: string;
   status: 'running' | 'done' | 'failed' | 'cancelled';

@@ -1,0 +1,86 @@
+.cc-simple-badge {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.3;
+  color: #141a22;
+  box-shadow: inset 0 1px 0 #ffffff24;
+}
+.cc-simple-badge.is-check {
+  background: var(--review-check);
+}
+.cc-simple-badge.is-error {
+  background: var(--review-cut);
+}
+.cc-simple-badge.is-pause {
+  background: var(--review-pause);
+}
+.cc-simple-pause-row {
+  margin: 4px 0;
+  border: 1px solid var(--cc-border);
+  border-radius: 8px;
+  background: var(--review-pause-bg);
+}
+.cc-simple .cc-simple-pause-row button:not(.cc-review-trash) {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  font-size: 11px;
+  color: var(--cc-text-muted);
+}
+.cc-simple-pause-row button > span:last-child {
+  font-size: 12px;
+  color: var(--cc-text);
+}
+.cc-simple-suggestion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+  text-align: left;
+  margin: 8px 0;
+}
+.cc-simple-suggestion strong,
+.cc-simple-suggestion small {
+  flex-basis: 100%;
+  line-height: 1.5;
+}
+.cc-simple-suggestion small {
+  color: var(--cc-text-muted);
+}
+.cc-simple-pause .cc-simple-badge {
+  margin-right: 8px;
+}
+
+.cc-simple-row, .cc-simple-pause-row, .cc-simple-suggestion, .cc-simple-pause { position: relative; padding-right: 44px; }
+.cc-simple .cc-review-trash { position: absolute; right: 8px; top: 8px; opacity: 0; padding: 6px; border-radius: 8px; color: var(--cc-text); background: var(--cc-panel); }
+.cc-simple-row:hover > .cc-review-trash, .cc-simple-pause-row:hover > .cc-review-trash, .cc-simple-suggestion:hover > .cc-review-trash, .cc-simple-pause:hover > .cc-review-trash, .cc-simple .cc-review-trash:focus-visible { opacity: 1; }
+.cc-simple .cc-review-trash:disabled { visibility: hidden; }
+.cc-remove-pauses { margin: 8px 12px; padding: 8px 12px; border-radius: 8px; }
+@media (hover: none) { .cc-simple .cc-review-trash { opacity: 1; } }
+
+.cc-simple .cc-simple-row { padding-right: 48px; }
+
+.cc-simple-badge.is-kept { background: var(--review-kept); }
+.cc-simple .cc-review-word { background: transparent; color: inherit; border: 0; padding: 2px 1px; font: inherit; border-radius: 4px; }
+.cc-simple .cc-review-word:hover:not(:disabled), .cc-simple .cc-review-word:focus-visible { background: var(--review-cut); color: #141a22; text-decoration: line-through; }
+.cc-simple .cc-review-word.is-cut { opacity: .45; text-decoration: line-through; }
+.cc-simple-badge.is-error { background: var(--review-check); }
+.cc-simple .cc-simple-ruler .error, .cc-simple .cc-simple-legend .error { background: var(--review-check); }
+
+.cc-pause-tools { padding: 8px 12px; font-size: 12px; }
+.cc-pause-tools input[type=number] { max-width: 85px; margin-left: 8px; }
+.cc-pause-tools progress { width: 100%; accent-color: var(--review-pause); }
+.cc-pause-confirm { margin: 10px 0; padding: 12px; border: 1px solid var(--cc-border); border-radius: 10px; background: var(--cc-panel); }
+.cc-pause-confirm > div { display: flex; gap: 10px; align-items: center; justify-content: space-between; margin: 6px 0; }
+.cc-simple-row.kind-pause { background: var(--review-pause-bg); }
+.cc-simple-row.kind-untranscribed { border-left: 3px solid var(--review-check); }

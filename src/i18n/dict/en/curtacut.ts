@@ -1,4 +1,10 @@
 export default {
+  "Engine: {engine}": "Engine: {engine}",
+  "Device: {device}": "Device: {device}",
+  "Fallback: {reason}": "Fallback: {reason}",
+  "Native transcription on Windows uses CPU. Enable WebGPU to try GPU with Tiny, Base or Small. This requires the browser model files.": "Native transcription on Windows uses CPU. Enable WebGPU to try GPU with Tiny, Base or Small. This requires the browser model files.",
+  "WebGPU takes priority for supported models. Failures switch to CPU and appear in transcription activity.": "WebGPU takes priority for supported models. Failures switch to CPU and appear in transcription activity.",
+
   "Untitled project": "Untitled project",
   "Sequence {n}": "Sequence {n}",
   "Sequence": "Sequence",

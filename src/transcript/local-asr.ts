@@ -6,7 +6,7 @@ import { DEFAULT_TRANSCRIPTION_LANGUAGE } from '../../shared/transcription-langu
 // Metal/D3D12/Vulkan, wasm fallback). No uploads, no API key, offline-capable.
 import type { TranscriptResult } from './types';
 import type { AsrConfig, AsrResult, AsrDevice, LocalAsrWorkerResponse } from './local-asr-types';
-import { chooseAsrConfig, detectDeviceProfile, markAsrWebgpuBroken } from './deviceProfile';
+import { chooseAsrConfig, detectDeviceProfile, markAsrWebgpuBroken, asrBackendPreference } from './deviceProfile';
 import {
   TranscriptionError, transcriptionSourceForPath,
   type AssemblyAiCheckpointWriter, type AssemblyAiResumeCheckpoint, type TranscribeOptions,
@@ -65,6 +65,13 @@ export class LocalAsrClient {
   /** Requested load key; the actual backend may be wasm after a WebGPU fallback. */
   private config: AsrConfig | null = null;
   private loading: Promise<void> | null = null;
+  private actualDevice: AsrDevice | null = null;
+  private fallbackReason: string | undefined;
+  private onRuntime: (device: AsrDevice, fallback?: string) => void = () => {};
+  attachRuntime(listener: (device: AsrDevice, fallback?: string) => void): void {
+    this.onRuntime = listener;
+    if (this.actualDevice) listener(this.actualDevice, this.fallbackReason);
+  }
   private onProgress: ProgressListener = () => {};
 
   attachProgress(listener: ProgressListener): void {
@@ -145,11 +152,15 @@ export class LocalAsrClient {
             : config.device === 'wasm' ? WASM_LOAD_TIMEOUT_MS : undefined,
         );
         this.config = config;
+        this.actualDevice = config.device;
+        this.onRuntime(config.device, this.fallbackReason);
       } catch (webgpuError) {
         signal?.throwIfAborted();
         if (config.device !== 'webgpu') throw webgpuError;
         // A half-initialized WebGPU session can corrupt the wasm fallback.
         this.dispose();
+        this.fallbackReason = `WebGPU → CPU: ${webgpuError instanceof Error ? webgpuError.message : String(webgpuError)}`;
+        this.onRuntime('wasm', this.fallbackReason);
         const fallback: AsrConfig = { ...config, device: 'wasm' };
         await this.request({
           type: 'load',
@@ -158,6 +169,8 @@ export class LocalAsrClient {
           revision: fallback.revision,
         }, WASM_LOAD_TIMEOUT_MS);
         this.config = config;
+        this.actualDevice = 'wasm';
+        this.onRuntime('wasm', this.fallbackReason);
       }
     })();
     this.loading = loading;
@@ -176,16 +189,26 @@ export class LocalAsrClient {
       // The worker drops its pipeline when a run fails (an exhausted wasm heap
       // leaves the session unusable), so forget the cached load key as well or
       // the next attempt short-circuits ensureLoaded and finds no model.
+      if (this.actualDevice === 'webgpu' && this.config) {
+        const fallback: AsrConfig = { ...this.config, device: 'wasm' };
+        this.dispose();
+        this.fallbackReason = `WebGPU → CPU: ${error instanceof Error ? error.message : String(error)}`;
+        this.onRuntime('wasm', this.fallbackReason);
+        await this.ensureLoaded(fallback);
+        return this.request({ type: 'transcribe', samples, language });
+      }
       this.config = null;
       throw error;
     }
     // A WebGPU session that yields an empty transcript is silently broken
     // (measured: encoder fp16 on Metal/WebGPU); remember it and retry on wasm
     // once so the user still gets their transcript this run.
-    if (this.config?.device === 'webgpu' && !result.text && result.chunks.length === 0) {
+    if (this.actualDevice === 'webgpu' && this.config && !result.text && result.chunks.length === 0) {
       markAsrWebgpuBroken();
       const fallback: AsrConfig = { ...this.config, device: 'wasm' };
       this.dispose();
+      this.fallbackReason = 'WebGPU → CPU: a GPU retornou uma transcrição vazia.';
+      this.onRuntime('wasm', this.fallbackReason);
       await this.ensureLoaded(fallback);
       return this.request({ type: 'transcribe', samples, language });
     }
@@ -196,6 +219,8 @@ export class LocalAsrClient {
     this.worker?.terminate();
     this.worker = null;
     this.config = null;
+    this.actualDevice = null;
+    this.fallbackReason = undefined;
     for (const pending of this.pending.values()) {
       pending.reject(new Error('Local ASR worker disposed'));
     }
@@ -286,6 +311,7 @@ async function tryNativeEngine(
 ): Promise<{ readonly result?: AsrResult; readonly failure?: Error }> {
   if (status && !asrEngineReady(status, 'native')) {
     onWait?.(t('桌面引擎的模型文件未下载，本次使用浏览器引擎'));
+    opts.onProgress?.({ stage: 'loading', fallback: 'Modelo nativo indisponível; usando o motor do navegador.' });
     return {};
   }
   let failure: Error | undefined;
@@ -295,12 +321,15 @@ async function tryNativeEngine(
     signal: opts.signal,
     language: opts.languageCode ?? DEFAULT_TRANSCRIPTION_LANGUAGE,
     onProgress: (progress, file) => {
+      if (file === '@fallback-cpu') opts.onProgress?.({ stage: 'transcribing', device: 'CPU (nativo)', fallback: 'O processamento na GPU falhou; a transcrição está sendo refeita na CPU.' });
       const stage = file?.startsWith('@') ? file.slice(1) : 'loading';
       opts.onProgress?.({ stage: stage === 'preparing' ? 'preparing' : stage === 'transcribing' ? 'transcribing' : 'loading', percent: progress, model: config.modelId });
       if (!file?.startsWith('@')) reportModelProgress(onWait, progress, file);
     },
+    onBackend: (backend) => opts.onProgress?.({ stage: 'loading', engine: 'whisper.cpp', device: backend === 'native-cpu' ? 'CPU (nativo)' : `GPU (${backend})`, model: config.modelId }),
     onFallback: (reason) => {
       failure = reason;
+      opts.onProgress?.({ stage: 'loading', fallback: `whisper.cpp → Transformers.js: ${reason.message}` });
       onWait?.(t('桌面原生推理不可用，已回退浏览器引擎'));
     },
   });
@@ -328,7 +357,7 @@ export async function localTranscribePathResumable(
   // engine right before it runs: the companion for whisper.cpp, then the ONNX
   // export for the browser fallback.
   const status = await fetchLocalAsrModelStatus(config.modelId);
-  const nativeEnabled = desktopNativeInferenceEnabled();
+  const nativeEnabled = desktopNativeInferenceEnabled() && asrBackendPreference() !== 'webgpu';
   opts.signal?.throwIfAborted();
   opts.onProgress?.({ stage: 'loading', model: config.modelId });
   const native = nativeEnabled ? await tryNativeEngine(path, opts, config, status, onWait) : {};
@@ -338,7 +367,7 @@ export async function localTranscribePathResumable(
   }
   opts.signal?.throwIfAborted();
   assertBrowserAsrReady(config, status, { enabled: nativeEnabled, failure: native.failure });
-  opts.onProgress?.({ stage: 'preparing', model: config.modelId });
+  opts.onProgress?.({ stage: 'preparing', model: config.modelId, engine: 'Transformers.js / ONNX', device: config.device === 'webgpu' ? 'GPU WebGPU (carregando)' : 'CPU (WebAssembly)', ...(asrBackendPreference() === 'webgpu' && config.device !== 'webgpu' ? { fallback: 'WebGPU solicitado, mas indisponível para este modelo/dispositivo ou desativado após falha anterior. Usando CPU.' } : {}) });
   const source = await runTranscriptionStage(t('音轨准备'), () => transcriptionSourceForPath(path, opts, true));
   const samples = await runTranscriptionStage(t('音频解码'), () => decodeSourceToSamples(source));
   if (!hasTranscribableSignal(samples, TARGET_SR)) {
@@ -348,6 +377,7 @@ export async function localTranscribePathResumable(
   opts.signal?.throwIfAborted();
   const client = getSharedClient();
   let inference = false;
+  client.attachRuntime((device, fallback) => opts.onProgress?.({ stage: inference ? 'transcribing' : 'loading', engine: 'Transformers.js / ONNX', device: device === 'webgpu' ? `GPU WebGPU (${profile.webgpu.vendor || 'adaptador selecionado'})` : 'CPU (WebAssembly)', ...(fallback ? { fallback } : {}) }));
   client.attachProgress((progress, file) => {
     opts.onProgress?.({ stage: inference ? 'transcribing' : 'loading', percent: progress, model: config.modelId });
     if (!inference) reportModelProgress(onWait, progress, file);
@@ -365,7 +395,7 @@ export async function localTranscribePathResumable(
     const result = opts.signal ? await abortable(pending, opts.signal) : await pending;
     await onCheckpoint({ ...checkpoint, providerStatus: 'completed' });
     return toTranscriptResult(result);
-  } finally { opts.signal?.removeEventListener('abort', abort); client.attachProgress(() => {}); }
+  } finally { opts.signal?.removeEventListener('abort', abort); client.attachProgress(() => {}); client.attachRuntime(() => {}); }
 }
 
 export async function localTranscribePath(
@@ -395,7 +425,7 @@ export async function warmUpLocalAsr(catalog?: readonly LocalAsrModelStatus[]): 
     const models = catalog ?? await fetchLocalAsrCatalog() ?? [];
     const status = models.find((model) => model.modelId === config.modelId);
     if (!status) return;
-    if (asrEngineReady(status, 'native') && await warmUpDesktopNativeAsr(config)) return;
+    if (asrBackendPreference() !== 'webgpu' && asrEngineReady(status, 'native') && await warmUpDesktopNativeAsr(config)) return;
     if (asrEngineReady(status, 'browser')) await getSharedClient().ensureLoaded(config);
   } catch {
     // Best-effort only.

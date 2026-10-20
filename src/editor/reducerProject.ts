@@ -138,6 +138,12 @@ export function projectReduce(p: ProjectDoc, a: AnyAction): ProjectDoc {
           timelines,
         };
       }
+      case 'pool.fixTranscriptWord': {
+        const asset = p.assets.find(item => item.id === a.id);
+        if (!asset?.transcript?.[a.wordIndex] || asset.transcript[a.wordIndex]?.text === a.text) return p;
+        return { ...p, assets: p.assets.map(item => item.id === a.id ? { ...item,
+          transcript: item.transcript!.map((word,index) => index === a.wordIndex ? { ...word, text: a.text } : word) } : item) };
+      }
       case 'pool.setTranscription': {
         // Ingest ASR result → pool asset. Objects (words[]) always
         // differ by identity, so unlike updateAsset we don't early-out on equality.

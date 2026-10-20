@@ -9,6 +9,7 @@ import { storageLifecyclePlugin } from './storage-lifecycle.ts';
 import { projectStorePlugin } from "./project-store-plugin.ts";
 import { extensionStorePlugin } from "./extension-store.ts";
 import { exportPlugin } from "./export.ts";
+import { pauseAnalysisPlugin } from "./pause-analysis.ts";
 import { exportQaPlugin } from "./export-qa.ts";
 import { exportDestinationPlugin } from "./export-destination.ts";
 import { uploadPostPlugin } from "./upload-post.ts";
@@ -92,6 +93,7 @@ export function serverPlugins(options: { projectStoreHttp?: boolean } = {}): Plu
     uploadPostPlugin(),
     exportMediaSourcesPlugin(),
     exportQaPlugin(),
+    pauseAnalysisPlugin(),
     uploadMultipartPlugin(),
     uploadPlugin(),
     mobileUploadPlugin(),

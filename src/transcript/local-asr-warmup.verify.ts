@@ -166,6 +166,8 @@ try {
 
   FakeWorker.instances.length = 0;
   const fallbackClient = new LocalAsrClient();
+  const runtimes: Array<{ device: string; reason?: string }> = [];
+  fallbackClient.attachRuntime((device, reason) => runtimes.push({ device, reason }));
   const webgpuConfig: AsrConfig = { ...base, device: 'webgpu' };
   const fallbackLoad = fallbackClient.ensureLoaded(webgpuConfig);
   await waitFor(() => FakeWorker.instances[0]?.requests.length === 1);
@@ -174,10 +176,31 @@ try {
   assert.equal(FakeWorker.instances[1]!.requests[0]?.device, 'wasm');
   FakeWorker.instances[1]!.resolveNext();
   await fallbackLoad;
+  assert.equal(runtimes.at(-1)?.device, 'wasm', 'report actual CPU after failed WebGPU load');
+  assert.match(runtimes.at(-1)?.reason ?? '', /WebGPU → CPU/);
   await fallbackClient.ensureLoaded(webgpuConfig);
   assert.equal(FakeWorker.instances.length, 2,
     'a webgpu request already loaded through wasm fallback must reuse that worker');
   fallbackClient.dispose();
+
+  FakeWorker.instances.length = 0;
+  const gpuClient = new LocalAsrClient();
+  const runtimeFailures: string[] = [];
+  gpuClient.attachRuntime((_device, reason) => { if (reason) runtimeFailures.push(reason); });
+  const gpuLoad = gpuClient.ensureLoaded(webgpuConfig);
+  await waitFor(() => FakeWorker.instances[0]?.requests.length === 1);
+  FakeWorker.instances[0]!.resolveNext();
+  await gpuLoad;
+  const retry = gpuClient.transcribe(new Float32Array(16000), 'pt');
+  FakeWorker.instances[0]!.rejectNext('GPU device lost');
+  await waitFor(() => FakeWorker.instances[1]?.requests.length === 1);
+  assert.equal(FakeWorker.instances[1]!.requests[0]?.device, 'wasm');
+  FakeWorker.instances[1]!.resolveNext();
+  await waitFor(() => FakeWorker.instances[1]?.requests.length === 2);
+  FakeWorker.instances[1]!.resolveNext();
+  await retry;
+  assert.ok(runtimeFailures.some(reason => reason.includes('GPU device lost')));
+  gpuClient.dispose();
 
   // The worker has no locale dictionaries: it reports a wasm heap exhaustion by
   // kind and the client words it, naming the model and the page that fixes it.

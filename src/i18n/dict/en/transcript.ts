@@ -1,6 +1,7 @@
 // EN dictionary (field fragmentation, key = Chinese original text). Data files are exempt from the upper limit of row count.
 // Source: src/transcript/*(TranscriptPanel / TranscriptViews / useTranscript).
 export default {
+  '说话人': 'Speaker',
   '素材文件不可用，请在“我的素材”中重新链接后再转写': 'The media file is unavailable. Relink it in My Media before transcribing.',
   '无法连接转写服务，请检查网络和 AssemblyAI 配置后重试': 'Cannot reach the transcription service. Check the network and AssemblyAI settings, then try again.',
   '本地转写失败：模型未就绪或音频无法处理，请检查模型下载后重试': 'Local transcription failed: the model is unavailable or the audio cannot be processed. Check the model download and try again.',

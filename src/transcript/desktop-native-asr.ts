@@ -17,6 +17,7 @@ export interface DesktopNativeAsrOptions {
   readonly language: string;
   readonly onProgress?: (progress?: number, file?: string) => void;
   readonly onFallback?: (reason: Error) => void;
+  readonly onBackend?: (backend: DesktopAsrBackend) => void;
 }
 
 let requestSequence = 0;
@@ -36,6 +37,7 @@ export async function tryDesktopNativeAsr(
     const capabilities = await api.getCapabilities();
     if (!capabilities.asr.available
       || capabilities.asr.contractId !== ASR_INFERENCE_CONTRACT.id) return null;
+    if (capabilities.asr.preferredBackend) options.onBackend?.(capabilities.asr.preferredBackend as DesktopAsrBackend);
     options.signal?.throwIfAborted();
     const requestId = nextRequestId();
     const unsubscribe = api.subscribeProgress((progress) => {
@@ -55,6 +57,7 @@ export async function tryDesktopNativeAsr(
         language: options.language,
       });
       const response = options.signal ? await abortable(pending, options.signal) : await pending;
+      options.onBackend?.(response.backend);
       return {
         backend: response.backend,
         result: { text: response.text, chunks: [...response.chunks] },

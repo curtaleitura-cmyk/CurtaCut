@@ -34,6 +34,9 @@ export function TranscriptionActivityPanel() {
         {item.status === 'running' && item.percent !== undefined ? ` — ${Math.round(item.percent)}%` : ''}</div>
       {item.status === 'running' && <progress aria-label={t(stageLabels[item.stage])} max={100} value={item.percent} style={{ width: '100%', marginTop: 6 }} />}
       <div style={{ color: theme.textDim, marginTop: 4 }}>{t('Provider: {provider} · Language: {language}', { provider: item.provider === 'local' ? 'Whisper local' : item.provider, language: item.language === 'pt' ? 'Português (Brasil)' : item.language })}</div>
+      {item.engine && <div>{t('Engine: {engine}', { engine: item.engine })}</div>}
+      {item.device && <div>{t('Device: {device}', { device: item.device })}</div>}
+      {item.fallback && <div role="status" style={{ marginTop: 4, overflowWrap: 'anywhere' }}>{t('Fallback: {reason}', { reason: item.fallback })}</div>}
       {item.model && <div style={{ color: theme.textDim }}>{t('Model: {model}', { model: item.model })}</div>}
       <div>{t('Elapsed: {time}', { time: activityDuration((item.finishedAt ?? now) - item.startedAt) })}</div>
       {item.status === 'running' && item.percent === undefined && <div style={{ color: theme.textDim, marginTop: 4 }}>{t('This engine does not report a reliable percentage for this stage.')}</div>}
